@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flatforge-mcp"
+version = "0.1.0"
+description = "MCP bridge for the FlatForge geometry worker"
+requires-python = ">=3.11"
+dependencies = ["mcp>=1.2.0", "pydantic>=2.0"]
+
+[project.scripts]
+flatforge-mcp = "flatforge_mcp.bridge:mcp.run"
+
+[tool.setuptools.packages.find]
+where = [".."]
+include = ["flatforge_mcp*", "flatforge_proto*"]
