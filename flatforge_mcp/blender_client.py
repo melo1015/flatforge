@@ -14,7 +14,7 @@ class BlenderWorkerClient:
         reader, writer = await asyncio.wait_for(asyncio.open_connection(self.host, self.port), timeout=self.timeout)
         try:
             payload = json.dumps(make_request(method, params, request_id), separators=(",", ":"))
-            writer.write((payload + "\\n").encode("utf-8"))
+            writer.write((payload + "\n").encode("utf-8"))
             await writer.drain()
             line = await asyncio.wait_for(reader.readline(), timeout=self.timeout)
             if not line:
