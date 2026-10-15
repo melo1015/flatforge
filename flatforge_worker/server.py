@@ -23,7 +23,7 @@ class Handler(socketserver.StreamRequestHandler):
                 response = make_error(request_id, -32600, str(exc))
             except Exception:
                 response = make_error(request_id, -32603, "Internal worker error")
-            self.wfile.write((json.dumps(response, separators=(",", ":")) + "\\n").encode("utf-8"))
+            self.wfile.write((json.dumps(response, separators=(",", ":")) + "\n").encode("utf-8"))
 
 def main():
     host = os.getenv("FLATFORGE_HOST", "127.0.0.1")
