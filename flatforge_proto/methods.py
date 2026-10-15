@@ -1,0 +1,5 @@
+"""Canonical worker method names."""
+PING = "system.ping"
+UNFOLD = "geometry.unfold"
+NEST = "geometry.nest"
+GENERATE_RIBS = "geometry.generate_ribs"
