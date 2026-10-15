@@ -1,0 +1,7 @@
+FROM python:3.12-slim
+WORKDIR /app
+COPY flatforge_proto ./flatforge_proto
+COPY flatforge_mcp ./flatforge_mcp
+RUN pip install --no-cache-dir ./flatforge_mcp
+ENV PYTHONPATH=/app
+CMD ["python", "-m", "flatforge_mcp.bridge"]
