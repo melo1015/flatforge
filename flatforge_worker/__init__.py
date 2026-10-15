@@ -1,0 +1,1 @@
+"""FlatForge worker package."""
