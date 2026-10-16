@@ -28,7 +28,7 @@ Limitations: this is not a cut optimizer, does not detect 2D self-overlap, and a
 ## Not yet production-ready
 
 - Blender add-on operators and registration are implemented; Blender-version-specific runtime and end-to-end integration tests are still required.
-- Polygon nesting with collision detection and optimization.
+- Polygon nesting is implemented for simple, hole-free contours, but further algorithmic quality testing is needed; optimal packing is not guaranteed.
 - Robust contour stitching and actual rib-solid generation.
 - TLS, job queueing, durable job state, and resource isolation for untrusted workloads. Shared-token authentication is optional and does not encrypt traffic.
 - Structural analysis validated against a qualified solver and physical test data.
