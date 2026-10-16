@@ -71,9 +71,19 @@ def _split_free_rectangles(free_rectangles: list[dict], used: dict) -> list[dict
     result = [r for r in result if r["width"] > _EPSILON and r["height"] > _EPSILON]
     pruned = []
     for i, rect in enumerate(result):
-        if any(i != j and _contains(other, rect) for j, other in enumerate(result)):
+        rect_area = rect["width"] * rect["height"]
+        contained = False
+        for j, other in enumerate(result):
+            if i == j or not _contains(other, rect):
+                continue
+            other_area = other["width"] * other["height"]
+            if other_area > rect_area + _EPSILON or (
+                math.isclose(other_area, rect_area, abs_tol=_EPSILON) and j < i
+            ):
+                contained = True
+                break
+        if contained:
             continue
-        # Identical free rectangles can be produced by splitting adjacent regions.
         if not any(
             math.isclose(rect["x"], other["x"], abs_tol=_EPSILON)
             and math.isclose(rect["y"], other["y"], abs_tol=_EPSILON)
@@ -91,8 +101,8 @@ def nest_parts(params: dict) -> dict:
     parts = params.get("parts")
     if not isinstance(parts, list) or not parts:
         raise ValueError("'parts' must be a non-empty list")
-    if len(parts) > 5000:
-        raise ValueError("at most 5000 parts are supported per nesting request")
+    if len(parts) > 500:
+        raise ValueError("at most 500 parts are supported per nesting request")
 
     sheet_width = _positive_number(params.get("sheet_width", 1000), "sheet_width")
     sheet_height = _positive_number(params.get("sheet_height", 1000), "sheet_height")
@@ -119,14 +129,13 @@ def nest_parts(params: dict) -> dict:
         height = _positive_number(part.get("height"), f"parts[{index}].height")
         normalized.append({"id": part_id, "width": width, "height": height})
 
-    # Place larger parts first for a stable, useful baseline. IDs break ties.
     normalized.sort(
         key=lambda p: (-max(p["width"], p["height"]), -(p["width"] * p["height"]), str(p["id"]))
     )
     usable_w = sheet_width - 2 * margin
     usable_h = sheet_height - 2 * margin
-    # The extra gap is included in each occupied rectangle. Enlarging the usable
-    # rectangle by one gap preserves edge clearance without requiring an edge gap.
+    # One gap is added to occupied rectangles and to the usable rectangle. This
+    # enforces spacing between parts without imposing a gap at the sheet edge.
     free_rectangles = [{
         "x": margin, "y": margin,
         "width": usable_w + gap, "height": usable_h + gap,
@@ -161,17 +170,10 @@ def nest_parts(params: dict) -> dict:
             continue
 
         _, free, width, height, rotated, padded_w, padded_h = best
-        used = {
-            "x": free["x"], "y": free["y"],
-            "width": padded_w, "height": padded_h,
-        }
+        used = {"x": free["x"], "y": free["y"], "width": padded_w, "height": padded_h}
         placements.append({
-            "id": part["id"],
-            "x": round(used["x"], 6),
-            "y": round(used["y"], 6),
-            "width": width,
-            "height": height,
-            "rotated_90": rotated,
+            "id": part["id"], "x": round(used["x"], 6), "y": round(used["y"], 6),
+            "width": width, "height": height, "rotated_90": rotated,
         })
         free_rectangles = _split_free_rectangles(free_rectangles, used)
 
@@ -182,9 +184,7 @@ def nest_parts(params: dict) -> dict:
     return {
         "status": "partial" if unplaced else "ok",
         "algorithm": "rectangular_maxrects_best_short_side_fit",
-        "sheet": {
-            "width": sheet_width, "height": sheet_height, "margin": margin, "gap": gap,
-        },
+        "sheet": {"width": sheet_width, "height": sheet_height, "margin": margin, "gap": gap},
         "placements": placements,
         "unplaced": unplaced,
         "utilization": round(placed_area / (sheet_width * sheet_height), 6),
