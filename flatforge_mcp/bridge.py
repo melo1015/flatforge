@@ -11,17 +11,17 @@ async def flatforge_ping() -> dict:
 
 @mcp.tool()
 async def unfold_mesh(mesh: dict) -> dict:
-    """Request mesh unfolding; current engine returns a placeholder."""
+    """Unfold a triangle mesh into 2D coordinates; output is not overlap-checked."""
     return await get_client().call(UNFOLD, {"mesh": mesh})
 
 @mcp.tool()
 async def nest_parts(parts: list[dict], sheet_width: float | None = None, sheet_height: float | None = None) -> dict:
-    """Request nesting; current engine returns a placeholder."""
+    """Nest rectangular or supported simple-polygon parts on a sheet using a deterministic heuristic."""
     return await get_client().call(NEST, {"parts": parts, "sheet_width": sheet_width, "sheet_height": sheet_height})
 
 @mcp.tool()
 async def generate_ribs(mesh: dict) -> dict:
-    """Request rib generation; current engine returns a placeholder."""
+    """Extract mesh cross-section segments at regular axis-aligned plane offsets; does not create rib solids."""
     return await get_client().call(GENERATE_RIBS, {"mesh": mesh})
 
 if __name__ == "__main__":

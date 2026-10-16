@@ -17,9 +17,9 @@ This document distinguishes implemented algorithms from work that still requires
 
 Limitations: this is not a cut optimizer, does not detect 2D self-overlap, and assumes fan triangulation is appropriate for polygon faces. Results require independent geometric validation before fabrication.
 
-### Rectangular nesting
+### Rectangular and polygon nesting
 
-`geometry.nest` accepts rectangular parts with `id`, `width`, and `height`; optional sheet dimensions, margin, gap and rotation are supported. It uses a deterministic shelf heuristic, not an optimal polygon nesting algorithm. Parts that cannot be placed are returned in `unplaced`.
+`geometry.nest` accepts rectangular parts with `id`, `width`, and `height`, and simple, hole-free polygon parts with `id` and `points`. Rectangular parts use a deterministic MaxRects-style heuristic; polygon parts use a vertex-alignment heuristic with compact-envelope scoring. Neither is an optimal solver. Polygon mode has documented part and vertex limits. FlatForge Maker additionally validates returned layouts independently before displaying or exporting them. Parts that cannot be placed are returned in `unplaced`.
 
 ### Mesh sections for rib planning
 
@@ -28,7 +28,7 @@ Limitations: this is not a cut optimizer, does not detect 2D self-overlap, and a
 ## Not yet production-ready
 
 - Blender add-on operators and registration are implemented; Blender-version-specific runtime and end-to-end integration tests are still required.
-- Polygon nesting with collision detection and optimization.
+- Polygon nesting is implemented for simple, hole-free contours, but further algorithmic quality testing is needed; optimal packing is not guaranteed.
 - Robust contour stitching and actual rib-solid generation.
 - TLS, job queueing, durable job state, and resource isolation for untrusted workloads. Shared-token authentication is optional and does not encrypt traffic.
 - Structural analysis validated against a qualified solver and physical test data.
