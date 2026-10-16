@@ -92,11 +92,19 @@ def _edge_distance(a, b, c, d):
                _point_segment_distance(c, a, b), _point_segment_distance(d, a, b))
 
 
+def _vertex_on_boundary(point, polygon):
+    return any(_on_segment(polygon[i], polygon[(i + 1) % len(polygon)], point) for i in range(len(polygon)))
+
+
 def _polygons_conflict(a, b, gap):
     if any(_proper_intersection(a[i], a[(i + 1) % len(a)], b[j], b[(j + 1) % len(b)])
            for i in range(len(a)) for j in range(len(b))):
         return True
     if _inside(a[0], b) or _inside(b[0], a):
+        return True
+    # Coincident contours have no proper crossings and all vertices lie on
+    # the opposite boundary, but they occupy exactly the same area.
+    if all(_vertex_on_boundary(point, b) for point in a) and all(_vertex_on_boundary(point, a) for point in b):
         return True
     if gap > EPS:
         return any(_edge_distance(a[i], a[(i + 1) % len(a)], b[j], b[(j + 1) % len(b)]) < gap - EPS
