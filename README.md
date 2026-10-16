@@ -53,7 +53,7 @@ Then open http://127.0.0.1:8787. See [FlatForge Maker documentation](flatforge_m
 
 Unfolding expects `mesh.vertices` as 3D coordinate triples and `mesh.faces` as vertex-index lists. Nesting accepts rectangular parts with `id`, `width`, and `height`, or simple polygon parts with `id` and `points` (a list of `[x, y]` coordinates). Polygon nesting is heuristic and supports no holes. Rib planning intersects a mesh with axis-aligned planes and returns section segments.
 
-See [protocol](docs/protocol.md), [MCP tools](docs/mcp_tools.md), [deployment](docs/deployment.md), [implementation status](docs/implementation-status.md), and the [integration audit](docs/integration-audit.md).
+Start with the [integration and user guide](docs/integration-user-guide.md) for setup instructions and five implementation cases. Also see [protocol](docs/protocol.md), [MCP tools](docs/mcp_tools.md), [deployment](docs/deployment.md), [implementation status](docs/implementation-status.md), and the [integration audit](docs/integration-audit.md).
 
 ## Safety and limitations
 
