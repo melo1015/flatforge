@@ -96,3 +96,49 @@ def test_unknown_path_returns_404(maker_server):
     status, _, body = request(maker_server, "GET", "/not-a-file")
     assert status == 404
     assert json.loads(body)["error"] == "Not found"
+
+
+
+def test_svg_export_endpoint_returns_mm_svg_attachment(maker_server):
+    payload = {
+        "parts": [{"id": "panel", "width": 100, "height": 50}],
+        "sheet_width": 300,
+        "sheet_height": 200,
+        "margin": 5,
+        "gap": 3,
+        "allow_rotation": True,
+    }
+    status, content_type, body = request(
+        maker_server,
+        "POST",
+        "/api/export.svg",
+        body=json.dumps(payload),
+        headers={"Content-Type": "application/json"},
+    )
+    assert status == 200
+    assert content_type.startswith("image/svg+xml")
+    assert b'width="300mm"' in body
+    assert b'height="200mm"' in body
+    assert b'fill="none"' in body
+    assert b'stroke="#000000"' in body
+
+
+def test_svg_export_endpoint_rejects_when_no_part_fits(maker_server):
+    payload = {
+        "parts": [{"id": "too-large", "width": 200, "height": 200}],
+        "sheet_width": 100,
+        "sheet_height": 100,
+        "margin": 0,
+        "gap": 0,
+        "allow_rotation": False,
+    }
+    status, content_type, body = request(
+        maker_server,
+        "POST",
+        "/api/export.svg",
+        body=json.dumps(payload),
+        headers={"Content-Type": "application/json"},
+    )
+    assert status == 400
+    assert content_type.startswith("application/json")
+    assert "no placed parts" in json.loads(body)["error"]
