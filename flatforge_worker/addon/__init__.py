@@ -24,7 +24,7 @@ MAX_MESSAGE_BYTES = 1_048_576
 
 def _worker_call(method: str, params: dict, timeout: float = 30.0) -> dict:
     request = {"jsonrpc": "2.0", "id": 1, "method": method, "params": params}
-    payload = (json.dumps(request, separators=(",", ":")) + "\\n").encode("utf-8")
+    payload = (json.dumps(request, separators=(",", ":")) + "\n").encode("utf-8")
     if len(payload) > MAX_MESSAGE_BYTES:
         raise ValueError("Request exceeds FlatForge's message size limit")
     with socket.create_connection((DEFAULT_HOST, DEFAULT_PORT), timeout=timeout) as connection:
@@ -34,7 +34,7 @@ def _worker_call(method: str, params: dict, timeout: float = 30.0) -> dict:
             line = stream.readline(MAX_MESSAGE_BYTES + 1)
     if not line:
         raise ConnectionError("FlatForge worker closed the connection without a response")
-    if len(line) > MAX_MESSAGE_BYTES or not line.endswith(b"\\n"):
+    if len(line) > MAX_MESSAGE_BYTES or not line.endswith(b"\n"):
         raise ValueError("FlatForge worker returned an oversized or incomplete response")
     response = json.loads(line)
     if not isinstance(response, dict) or response.get("jsonrpc") != "2.0" or response.get("id") != 1:
