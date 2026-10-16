@@ -77,6 +77,7 @@ def _edge_distance(a,b,c,d):
 
 
 def _conflict(a,b,gap):
+    if len(a) == len(b) and set(a) == set(b): return True
     for i,p in enumerate(a):
         q=a[(i+1)%len(a)]
         for j,r in enumerate(b):
