@@ -14,7 +14,7 @@ def test_imports_rect_and_polygon_preserving_normalized_contours():
     assert result["outlines"][0]["width"] == 30
     assert result["outlines"][0]["points"] == [[0, 0], [30, 0], [30, 40], [0, 40]]
     assert result["outlines"][1]["points"] == [[0, 0], [20, 0], [10, 20]]
-    assert "cajas rectangulares" in result["warning"]
+    assert "heurística de alineación" in result["warning"]
 
 
 def test_imports_only_closed_polyline():
