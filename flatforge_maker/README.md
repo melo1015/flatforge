@@ -37,7 +37,7 @@ The polygon engine uses deterministic vertex-alignment candidates, scores candid
 
 ## Nesting algorithm
 
-A reproducible benchmark is available at `benchmarks/nesting_benchmark.py`. Run `python benchmarks/nesting_benchmark.py --iterations 5` from the repository root to report median/minimum runtime, placed-part counts, unplaced IDs, utilization, and deterministic-output checks for fixed rectangular and polygon scenarios. Runtime depends on hardware and Python version; compare timing only on the same environment. The benchmark does not claim optimality or replace physical/CAM validation.
+A reproducible benchmark is available at `benchmarks/nesting_benchmark.py`. Run `python benchmarks/nesting_benchmark.py --iterations 5` from the repository root to report median/minimum runtime, placed-part counts, unplaced IDs, utilization, and deterministic-output checks for fixed rectangular and polygon scenarios. The polygon case runs the same input through both the current compact-envelope score and the pre-0.7 bottom-left score, allowing a direct quality comparison. Runtime depends on hardware and Python version; compare timing only on the same environment. The benchmark does not claim optimality or replace physical/CAM validation.
 
 
 The engine uses a deterministic **MaxRects-style best-short-side-fit heuristic**. It evaluates both orientations when rotation is enabled, maintains free rectangular regions, and scores candidate placements by the short and long leftover sides. The rectangular implementation is bounded to 500 parts per request. Polygon requests are bounded to 100 parts and 5,000 total vertices.
