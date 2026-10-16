@@ -150,13 +150,20 @@ def unfold_mesh(params: dict) -> dict:
                 "x": round(x - min_x, 8), "y": round(y - min_y, 8),
             })
         triangles_2d.append(out_face)
+    unique_cut_edges = []
+    seen_cut_edges = set()
+    for item in cut_edges:
+        key = (min(item["faces"]), max(item["faces"]), tuple(item["edge"]))
+        if key not in seen_cut_edges:
+            seen_cut_edges.add(key)
+            unique_cut_edges.append(item)
     return {
         "status": "ok",
         "algorithm": "triangle_bfs_edge_length_unfold",
         "vertices_2d": vertices_2d,
         "triangles_2d": triangles_2d,
         "component_count": len(component_roots),
-        "cut_edges": cut_edges,
+        "cut_edges": unique_cut_edges,
         "warnings": [
             "Face traversal chooses a spanning forest; cut optimization is not performed.",
             "Self-overlap detection is not performed.",
