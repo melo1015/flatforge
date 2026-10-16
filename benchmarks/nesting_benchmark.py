@@ -65,6 +65,33 @@ CASES = [
             ],
         },
     },
+    {
+        "name": "polygons_concave",
+        "request": {
+            "sheet_width": 80, "sheet_height": 60, "margin": 2, "gap": 1,
+            "parts": [
+                {"id": "u1", "points": [[0, 0], [30, 0], [30, 8], [8, 8], [8, 28], [0, 28]]},
+                {"id": "u2", "points": [[0, 0], [26, 0], [26, 7], [7, 7], [7, 24], [0, 24]]},
+                {"id": "tri1", "points": [[0, 0], [16, 0], [8, 12]]},
+                {"id": "tri2", "points": [[0, 0], [14, 0], [7, 10]]},
+                {"id": "rect1", "width": 12, "height": 9},
+                {"id": "rect2", "width": 10, "height": 8},
+            ],
+        },
+    },
+    {
+        "name": "polygons_tight_fit",
+        "request": {
+            "sheet_width": 45, "sheet_height": 32, "margin": 1, "gap": 1,
+            "parts": [
+                {"id": "wide_tri", "points": [[0, 0], [20, 0], [10, 14]]},
+                {"id": "rect_a", "width": 15, "height": 10},
+                {"id": "rect_b", "width": 14, "height": 9},
+                {"id": "small_tri", "points": [[0, 0], [9, 0], [4.5, 7]]},
+                {"id": "rect_c", "width": 8, "height": 7},
+            ],
+        },
+    },
 ]
 
 
@@ -73,7 +100,8 @@ def run_benchmarks(iterations: int = 5) -> dict:
         raise ValueError("iterations must be an integer >= 1")
     results = []
     for case in CASES:
-        modes = ("compact_envelope", "bottom_left") if case["name"] == "polygons_mixed" else (None,)
+        has_polygons = any("points" in part for part in case["request"]["parts"])
+        modes = ("compact_envelope", "bottom_left") if has_polygons else (None,)
         for mode in modes:
             samples = []
             reference = None
@@ -117,13 +145,36 @@ def run_benchmarks(iterations: int = 5) -> dict:
                 "usable_area_percent": metrics["usable_area_percent"],
                 "unplaced_ids": metrics["unplaced_ids"],
             })
+    comparisons = []
+    by_case_mode = {(item["case"], item["comparison"]): item for item in results}
+    for case in CASES:
+        if not any("points" in part for part in case["request"]["parts"]):
+            continue
+        compact = by_case_mode[(case["name"], "compact_envelope")]
+        baseline = by_case_mode[(case["name"], "bottom_left")]
+        comparisons.append({
+            "case": case["name"],
+            "placed_delta": compact["placed"] - baseline["placed"],
+            "completion_delta_percent": round(
+                compact["completion_percent"] - baseline["completion_percent"], 2
+            ),
+            "usable_area_delta_percent": round(
+                compact["usable_area_percent"] - baseline["usable_area_percent"], 4
+            ),
+            "median_ms_delta": round(compact["median_ms"] - baseline["median_ms"], 3),
+            "compact_envelope_better_or_equal": (
+                compact["placed"] >= baseline["placed"]
+                and compact["usable_area_percent"] >= baseline["usable_area_percent"]
+            ),
+        })
     return {
-        "benchmark_version": 2,
+        "benchmark_version": 3,
         "note": (
-            "Runtime is machine-dependent. The polygon case compares the current compact-envelope "
-            "score with the pre-0.7 bottom-left score on identical input; this is a heuristic "
-            "comparison, not proof of global optimality."
+            "Runtime is machine-dependent. Each polygon case compares compact-envelope scoring "
+            "with the pre-0.7 bottom-left baseline on identical input. Deltas are heuristic "
+            "evidence only, not proof of global optimality or manufacturing readiness."
         ),
+        "comparisons": comparisons,
         "results": results,
     }
 
