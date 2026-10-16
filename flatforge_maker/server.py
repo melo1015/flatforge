@@ -15,6 +15,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from flatforge_worker.engines.nesting import nest_parts
+from flatforge_maker.svg_export import render_cut_svg
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 MAX_REQUEST_BYTES = 256 * 1024
@@ -23,7 +24,7 @@ PORT = 8787
 
 
 class MakerHandler(BaseHTTPRequestHandler):
-    server_version = "FlatForgeMaker/0.3"
+    server_version = "FlatForgeMaker/0.4"
 
     def _send_bytes(self, status: int, body: bytes, content_type: str) -> None:
         self.send_response(status)
@@ -41,7 +42,7 @@ class MakerHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
         path = urlparse(self.path).path
         if path == "/api/health":
-            self._send_json(200, {"ok": True, "service": "flatforge-maker", "version": "0.3"})
+            self._send_json(200, {"ok": True, "service": "flatforge-maker", "version": "0.4"})
             return
 
         allowed_files = {
@@ -67,7 +68,8 @@ class MakerHandler(BaseHTTPRequestHandler):
         self._send_bytes(200, body, content_type)
 
     def do_POST(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
-        if urlparse(self.path).path != "/api/nest":
+        path = urlparse(self.path).path
+        if path not in {"/api/nest", "/api/export.svg"}:
             self._send_json(404, {"error": "Not found"})
             return
 
@@ -83,9 +85,7 @@ class MakerHandler(BaseHTTPRequestHandler):
         if length > MAX_REQUEST_BYTES:
             self._send_json(413, {"error": "Request body exceeds the 256 KiB limit"})
             return
-
-        content_type = self.headers.get_content_type()
-        if content_type != "application/json":
+        if self.headers.get_content_type() != "application/json":
             self._send_json(415, {"error": "Content-Type must be application/json"})
             return
 
@@ -95,6 +95,17 @@ class MakerHandler(BaseHTTPRequestHandler):
             if not isinstance(payload, dict):
                 raise ValueError("Request JSON must be an object")
             result = nest_parts(payload)
+            if path == "/api/export.svg":
+                body = render_cut_svg(result)
+                self.send_response(200)
+                self.send_header("Content-Type", "image/svg+xml; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Content-Disposition", 'attachment; filename="flatforge-patron.svg"')
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(body)
+                return
         except (UnicodeDecodeError, json.JSONDecodeError):
             self._send_json(400, {"error": "Request body must contain valid UTF-8 JSON"})
             return
