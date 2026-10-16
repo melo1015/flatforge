@@ -291,36 +291,43 @@
     }
   }
 
-  function exportSvg() {
+  async function exportSvg() {
     if (!lastResult || !lastRequest || !lastResult.placements?.length) return;
-    const exported = sheetSvg.cloneNode(true);
-    exported.querySelectorAll('[data-guide="true"], [data-preview-only="true"]').forEach((element) => element.remove());
-    // Export neutral, unfilled vector outlines rather than the colored preview style.
-    exported.querySelectorAll('[data-cut-line="true"]').forEach((element) => {
-      element.setAttribute("fill", "none");
-      element.setAttribute("stroke", "#000000");
-      element.setAttribute("stroke-width", "0.1");
-      element.removeAttribute("fill-opacity");
-      element.removeAttribute("vector-effect");
-    });
-    exported.setAttribute("xmlns", SVG_NS);
-    exported.setAttribute("width", `${lastRequest.sheet_width}mm`);
-    exported.setAttribute("height", `${lastRequest.sheet_height}mm`);
-    exported.setAttribute("viewBox", `0 0 ${lastRequest.sheet_width} ${lastRequest.sheet_height}`);
-    exported.setAttribute("version", "1.1");
-    exported.setAttribute("aria-label", "FlatForge Maker cutting pattern in millimeters");
-
-    const source = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(exported);
-    const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "flatforge-patron.svg";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-    showNotice("SVG exportado en milímetros. Abre el archivo en tu software de corte y confirma las dimensiones antes de enviar el trabajo.", "success");
+    exportButton.disabled = true;
+    const originalLabel = exportButton.innerHTML;
+    exportButton.textContent = "Preparando SVG…";
+    hideNotice();
+    try {
+      const response = await fetch("/api/export.svg", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(lastRequest)
+      });
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        throw new Error(errorPayload.error || `No se pudo exportar el SVG (HTTP ${response.status}).`);
+      }
+      const blob = await response.blob();
+      if (!blob.size || !blob.type.includes("image/svg+xml")) {
+        throw new Error("El servidor no devolvió un archivo SVG válido.");
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "flatforge-patron.svg";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showNotice("SVG generado por el motor Python. Abre el archivo en tu software de corte y confirma las dimensiones antes de fabricar.", "success");
+    } catch (error) {
+      showNotice(error instanceof TypeError
+        ? "No se pudo conectar con el motor local para generar el SVG."
+        : error.message || "Ocurrió un error al exportar el SVG.");
+    } finally {
+      exportButton.innerHTML = originalLabel;
+      exportButton.disabled = !lastResult || !lastResult.placements?.length;
+    }
   }
 
   function loadSamples() {
