@@ -47,7 +47,6 @@ def _validate(points, label):
         p.append((_number(xy[0],f"{label}.x",True),_number(xy[1],f"{label}.y",True)))
     if len(set(p))<3: raise ValueError(f"{label} needs three distinct vertices")
     area=sum(p[i][0]*p[(i+1)%len(p)][1]-p[(i+1)%len(p)][0]*p[i][1] for i in range(len(p)))
-    if abs(area)<EPS: raise ValueError(f"{label} polygon area must be positive")
     n=len(p)
     for i in range(n):
         a,b=p[i],p[(i+1)%n]
@@ -57,6 +56,7 @@ def _validate(points, label):
             c,d=p[j],p[(j+1)%n]
             if _crosses(a,b,c,d) or _on(a,b,c) or _on(a,b,d):
                 raise ValueError(f"{label} must be a simple polygon without self-intersections")
+    if abs(area)<EPS: raise ValueError(f"{label} polygon area must be positive")
     minx,miny=min(x for x,y in p),min(y for x,y in p)
     return [(x-minx,y-miny) for x,y in p]
 
