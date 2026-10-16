@@ -108,7 +108,7 @@ def import_svg_outlines(source: str) -> dict:
     return {
         "count": len(outlines),
         "outlines": outlines,
-        "warning": "Los contornos se conservan en la importación, pero el anidado y la exportación actuales usan cajas rectangulares envolventes. No fabricar como geometría final hasta implementar anidado poligonal.",
+        "warning": "El anidado poligonal conserva los vértices y usa una heurística de alineación; solo admite polígonos simples sin agujeros. Verifica la salida en el software CAM antes de fabricar.",
     }
 
 
