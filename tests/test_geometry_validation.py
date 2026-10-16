@@ -37,6 +37,32 @@ def test_validates_polygon_layout_with_concave_contour():
     assert report["placed"] + report["unplaced"] == len(request["parts"])
 
 
+def test_rejects_result_sheet_metadata_that_differs_from_request():
+    request = {
+        "sheet_width": 30, "sheet_height": 30,
+        "parts": [{"id": "a", "width": 5, "height": 5}],
+    }
+    result = nest_parts(request)
+    broken = copy.deepcopy(result)
+    broken["sheet"]["width"] = 300
+    with pytest.raises(ValueError, match="sheet settings differ"):
+        validate_nesting_result(request, broken)
+
+
+def test_rejects_rotation_when_request_disables_it():
+    request = {
+        "sheet_width": 20, "sheet_height": 20, "allow_rotation": False,
+        "parts": [{"id": "a", "width": 4, "height": 8}],
+    }
+    result = nest_parts(request)
+    broken = copy.deepcopy(result)
+    placement = broken["placements"][0]
+    placement["rotated_90"] = True
+    placement["width"], placement["height"] = 8, 4
+    with pytest.raises(ValueError, match="rotation is disabled"):
+        validate_nesting_result(request, broken)
+
+
 def test_rejects_out_of_bounds_placement():
     request = {"sheet_width": 30, "sheet_height": 30, "parts": [{"id": "a", "width": 5, "height": 5}]}
     result = nest_parts(request)
