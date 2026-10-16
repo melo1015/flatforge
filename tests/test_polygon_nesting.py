@@ -29,3 +29,17 @@ def test_rejects_negative_point():
 def test_polygon_part_limit():
     with pytest.raises(ValueError,match="at most 100"):
         nest_polygon_parts({"parts":[{"id":str(i),"points":[[0,0],[1,0],[0,1]]} for i in range(101)]})
+
+
+def test_identical_polygons_cannot_occupy_the_same_space():
+    result = nest_polygon_parts({
+        "sheet_width": 30, "sheet_height": 30, "margin": 0, "gap": 0,
+        "allow_rotation": False,
+        "parts": [
+            {"id": "one", "points": [[0, 0], [10, 0], [5, 8]]},
+            {"id": "two", "points": [[0, 0], [10, 0], [5, 8]]},
+        ],
+    })
+    assert result["placed_count"] == 2
+    a, b = result["placements"]
+    assert a["points"] != b["points"]
