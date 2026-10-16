@@ -29,17 +29,17 @@ Stop the server with Ctrl+C.
 6. Inspect the preview, utilization estimate, and any parts that could not be placed.
 7. Export SVG. The server recalculates the current request and generates the file independently of the preview DOM; verify dimensions and machine settings in your laser/CNC software before manufacturing.
 
-## Importación SVG (0.5)
+## Importación SVG (0.6)
 
-Use **Importar contornos SVG** to load simple outlines. The importer is server-side and uses Python's XML parser with a strict allowlist: direct-child `rect`, `polygon`, and closed `polyline` shapes only. It rejects DTD/entity declarations, scripts and other elements, event handlers, transforms, styles, references, nested groups, malformed geometry, and files over 256 KiB. Imported points are normalized to each shape's bounding-box origin and retained in browser memory for the current session.
+Use **Importar contornos SVG** to load simple outlines. The importer accepts direct-child `rect`, `polygon`, and explicitly closed `polyline` elements. It rejects DTD/entity declarations, scripts, event handlers, transforms, styles, references, nested groups, malformed geometry, and files over 256 KiB. Imported vertices are normalized and retained for the current session.
 
-**Important:** this milestone does not yet perform polygon nesting. Nesting and SVG export still use each imported outline's rectangular bounding box. The UI warns about this; do not use its exported rectangles as final cutting contours for non-rectangular parts. Curves, paths, holes, and transformed SVG geometry are intentionally not supported yet.
+The polygon engine uses deterministic vertex-alignment candidates and checks polygon-edge distances to prevent overlap and enforce the configured gap. It supports simple closed polygons without holes and 90-degree rotation. It is a heuristic, not an optimal solver; polygon mode is limited to 100 parts and 5,000 total vertices per request. Curves, holes, SVG paths, arbitrary-angle rotation, kerf compensation, and machine-specific toolpaths are not supported. Inspect exported files in the target CAM software before cutting.
 
 ## Nesting algorithm
 
 The engine uses a deterministic **MaxRects-style best-short-side-fit heuristic**. It evaluates both orientations when rotation is enabled, maintains free rectangular regions, and scores candidate placements by the short and long leftover sides. The rectangular implementation is bounded to 500 parts per request. Polygon requests are bounded to 100 parts and 5,000 total vertices.
 
-This is a heuristic, not a proof of optimal packing. Polygon requests are handled by a separate vertex-alignment heuristic for simple, hole-free contours; it is not an optimal solver.
+This is a heuristic, not a proof of optimal packing. Polygon requests use a separate vertex-alignment heuristic for simple, hole-free contours.
 
 ## Important limitations
 
