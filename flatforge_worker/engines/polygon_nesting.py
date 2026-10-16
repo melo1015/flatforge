@@ -103,7 +103,14 @@ def nest_polygon_parts(params):
         pid=part.get("id",str(i+1))
         if not isinstance(pid,(str,int)) or isinstance(pid,bool): raise ValueError(f"parts[{i}].id must be a string or integer")
         if str(pid) in seen: raise ValueError(f"duplicate part id: {pid}")
-        seen.add(str(pid)); points=_validate(part.get("points"),f"parts[{i}]"); total_vertices+=len(points)
+        seen.add(str(pid))
+        if "points" in part:
+            points=_validate(part.get("points"),f"parts[{i}]")
+        else:
+            rw=_number(part.get("width"),f"parts[{i}].width")
+            rh=_number(part.get("height"),f"parts[{i}].height")
+            points=[(0.0,0.0),(rw,0.0),(rw,rh),(0.0,rh)]
+        total_vertices+=len(points)
         if total_vertices>5000: raise ValueError("polygon nesting supports at most 5000 vertices in total")
         x0,y0,x1,y1=_bounds(points)
         area=abs(sum(points[k][0]*points[(k+1)%len(points)][1]-points[(k+1)%len(points)][0]*points[k][1] for k in range(len(points))))/2
