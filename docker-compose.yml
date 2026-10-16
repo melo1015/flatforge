@@ -6,6 +6,7 @@ services:
     environment:
       FLATFORGE_HOST: 0.0.0.0
       FLATFORGE_PORT: 8765
+      FLATFORGE_TOKEN: ${FLATFORGE_TOKEN:-}
     ports:
       - "127.0.0.1:8765:8765"
   mcp:
@@ -15,17 +16,6 @@ services:
     environment:
       FLATFORGE_HOST: worker
       FLATFORGE_PORT: 8765
+      FLATFORGE_TOKEN: ${FLATFORGE_TOKEN:-}
     depends_on:
       - worker
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: flatforge
-      POSTGRES_USER: flatforge
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-local-only}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "127.0.0.1:5432:5432"
-volumes:
-  postgres_data:
