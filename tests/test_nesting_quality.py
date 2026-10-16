@@ -1,6 +1,4 @@
 """Geometry invariants for the rectangular nesting engine."""
-import math
-
 from flatforge_worker.engines.nesting import nest_parts
 
 
@@ -14,16 +12,6 @@ def _assert_no_overlap_and_inside_sheet(result, sheet_width, sheet_height, margi
 
     for i, a in enumerate(parts):
         for b in parts[i + 1:]:
-            horizontal_gap = max(
-                b["x"] - (a["x"] + a["width"]),
-                a["x"] - (b["x"] + b["width"]),
-                0,
-            )
-            vertical_gap = max(
-                b["y"] - (a["y"] + a["height"]),
-                a["y"] - (b["y"] + b["height"]),
-                0,
-            )
             separated = (
                 a["x"] + a["width"] + gap <= b["x"] + 1e-6
                 or b["x"] + b["width"] + gap <= a["x"] + 1e-6
@@ -80,7 +68,7 @@ def test_layout_is_deterministic_for_same_request():
     assert nest_parts(request) == nest_parts(request)
 
 
-def test_rejects_too_many_parts():
+def test_rejects_more_than_500_parts():
     import pytest
-    with pytest.raises(ValueError, match="5000"):
-        nest_parts({"parts": [{"id": str(i), "width": 1, "height": 1} for i in range(5001)]})
+    with pytest.raises(ValueError, match="500 parts"):
+        nest_parts({"parts": [{"id": str(i), "width": 1, "height": 1} for i in range(501)]})
