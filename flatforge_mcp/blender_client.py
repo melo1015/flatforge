@@ -49,7 +49,7 @@ class BlenderWorkerClient:
             raise ValueError("Request exceeds maximum message size")
 
         async def _exchange():
-            reader, writer = await asyncio.open_connection(self.host, self.port)
+            reader, writer = await asyncio.open_connection(self.host, self.port, limit=self.max_message_bytes + 1)
             try:
                 writer.write(payload)
                 await writer.drain()
