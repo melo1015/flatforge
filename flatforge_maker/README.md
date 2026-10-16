@@ -1,4 +1,4 @@
-# FlatForge Maker 0.4
+# FlatForge Maker 0.5
 
 FlatForge Maker is an early, local-only web interface for rectangular sheet nesting. It provides a visual sheet preview, configurable sheet dimensions, margin and spacing, 90-degree rotation, a placed/unplaced summary, and SVG export using millimetres.
 
@@ -29,7 +29,7 @@ Stop the server with Ctrl+C.
 6. Inspect the preview, utilization estimate, and any parts that could not be placed.
 7. Export SVG. The server recalculates the current request and generates the file independently of the preview DOM; verify dimensions and machine settings in your laser/CNC software before manufacturing.
 
-## Nesting algorithm
+## Importación SVG (0.5)\n\nUse **Importar contornos SVG** to load simple outlines. The importer is server-side and uses Python's XML parser with a strict allowlist: direct-child `rect`, `polygon`, and closed `polyline` shapes only. It rejects DTD/entity declarations, scripts and other elements, event handlers, transforms, styles, references, nested groups, malformed geometry, and files over 256 KiB. Imported points are normalized to each shape's bounding-box origin and retained in browser memory for the current session.\n\n**Important:** this milestone does not yet perform polygon nesting. Nesting and SVG export still use each imported outline's rectangular bounding box. The UI warns about this; do not use its exported rectangles as final cutting contours for non-rectangular parts. Curves, paths, holes, and transformed SVG geometry are intentionally not supported yet.\n\n## Nesting algorithm
 
 The engine uses a deterministic **MaxRects-style best-short-side-fit heuristic**. It evaluates both orientations when rotation is enabled, maintains free rectangular regions, and scores candidate placements by the short and long leftover sides. The implementation is bounded to 500 parts per request to keep local calculations predictable.
 
@@ -48,7 +48,7 @@ The server binds to `127.0.0.1:8787` only. It has no TLS, user authentication, C
 
 ## Next steps
 
-- Add SVG part import and preserve real outlines.
+- Use imported polygon outlines in a true polygon nesting engine and export original contours.
 - Add machine-specific kerf compensation and toolpath settings.
 - Improve preview selection, dimensions, and warnings.
 - Add DXF support and project persistence.
