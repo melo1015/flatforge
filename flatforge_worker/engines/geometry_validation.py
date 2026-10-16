@@ -58,6 +58,12 @@ def _segments_intersect(a, b, c, d):
     ))
 
 
+def _proper_intersection(a, b, c, d):
+    ab_c, ab_d = _cross(a, b, c), _cross(a, b, d)
+    cd_a, cd_b = _cross(c, d, a), _cross(c, d, b)
+    return ((ab_c > EPS and ab_d < -EPS) or (ab_c < -EPS and ab_d > EPS)) and ((cd_a > EPS and cd_b < -EPS) or (cd_a < -EPS and cd_b > EPS))
+
+
 def _inside(point, polygon):
     x, y = point
     inside = False
@@ -87,7 +93,7 @@ def _edge_distance(a, b, c, d):
 
 
 def _polygons_conflict(a, b, gap):
-    if any(_segments_intersect(a[i], a[(i + 1) % len(a)], b[j], b[(j + 1) % len(b)])
+    if any(_proper_intersection(a[i], a[(i + 1) % len(a)], b[j], b[(j + 1) % len(b)])
            for i in range(len(a)) for j in range(len(b))):
         return True
     if _inside(a[0], b) or _inside(b[0], a):
