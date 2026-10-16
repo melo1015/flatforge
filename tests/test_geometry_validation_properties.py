@@ -76,3 +76,60 @@ def test_validator_rejects_corrupted_result_metadata(mutation, message):
     mutation(result)
     with pytest.raises(ValueError, match=message):
         validate_nesting_result(request, result)
+
+def _manual_u_shape_layout(rect_x):
+    request = {
+        "sheet_width": 50,
+        "sheet_height": 40,
+        "margin": 0,
+        "gap": 1,
+        "allow_rotation": False,
+        "parts": [
+            {
+                "id": "u-shape",
+                "points": [[0, 0], [30, 0], [30, 30], [20, 30], [20, 10], [10, 10], [10, 30], [0, 30]],
+            },
+            {"id": "insert", "width": 8, "height": 15},
+        ],
+    }
+    rect_points = [
+        [rect_x, 12],
+        [rect_x + 8, 12],
+        [rect_x + 8, 27],
+        [rect_x, 27],
+    ]
+    result = {
+        "status": "ok",
+        "sheet": {"width": 50, "height": 40, "margin": 0, "gap": 1},
+        "placements": [
+            {
+                "id": "u-shape", "x": 0, "y": 0, "width": 30, "height": 30,
+                "rotated_90": False,
+                "points": [[0, 0], [30, 0], [30, 30], [20, 30], [20, 10], [10, 10], [10, 30], [0, 30]],
+            },
+            {
+                "id": "insert", "x": rect_x, "y": 12, "width": 8, "height": 15,
+                "rotated_90": False, "points": rect_points,
+            },
+        ],
+        "unplaced": [],
+        "placed_count": 2,
+        "part_count": 2,
+    }
+    return request, result
+
+
+def test_validator_accepts_part_inside_concave_notch_when_clearance_is_met():
+    request, result = _manual_u_shape_layout(rect_x=11)
+    report = validate_nesting_result(request, result)
+    assert report["valid"] is True
+    assert report["checked_pairs"] == 1
+
+
+def test_validator_rejects_concave_notch_clearance_violation():
+    # The insert remains inside the U's bounding box and does not overlap its
+    # material, but is only 0.5 units from the left inner wall (required: 1).
+    request, result = _manual_u_shape_layout(rect_x=10.5)
+    with pytest.raises(ValueError, match="overlap or violate gap"):
+        validate_nesting_result(request, result)
+
