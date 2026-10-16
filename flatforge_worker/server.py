@@ -1,6 +1,7 @@
 """Bounded threaded TCP worker for newline-delimited JSON-RPC requests."""
 from __future__ import annotations
 
+import hmac
 import json
 import os
 import socket
@@ -45,7 +46,16 @@ class Handler(socketserver.StreamRequestHandler):
                 message = parse_message(raw.rstrip(b"\r\n"))
                 request_id = message.get("id")
                 try:
-                    result = dispatch(message["method"], message.get("params", {}))
+                    params = dict(message.get("params", {}))
+                    expected_token = os.getenv("FLATFORGE_TOKEN")
+                    if expected_token:
+                        supplied_token = params.pop("_auth", None)
+                        if not isinstance(supplied_token, str) or not hmac.compare_digest(supplied_token, expected_token):
+                            response = make_error(request_id, -32001, "Authentication required")
+                            if "id" in message:
+                                self._send(response)
+                            continue
+                    result = dispatch(message["method"], params)
                 except KeyError:
                     response = make_error(request_id, METHOD_NOT_FOUND, "Method not found")
                 except (ValueError, TypeError) as exc:
