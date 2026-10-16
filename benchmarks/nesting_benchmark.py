@@ -18,6 +18,8 @@ if str(ROOT) not in sys.path:
 
 from flatforge_worker.engines.nesting import nest_parts
 from flatforge_worker.engines.polygon_nesting import nest_polygon_parts
+from flatforge_worker.engines.geometry_validation import validate_nesting_result
+from flatforge_worker.engines.nesting_metrics import calculate_nesting_metrics
 
 
 CASES = [
@@ -82,6 +84,9 @@ def run_benchmarks(iterations: int = 5) -> dict:
                     if mode is not None else nest_parts(case["request"])
                 )
                 samples.append((time.perf_counter() - started) * 1000)
+                # Never report quality metrics for a geometrically invalid layout.
+                validation = validate_nesting_result(case["request"], result)
+                metrics = calculate_nesting_metrics(case["request"], result)
                 stable = {
                     "status": result["status"],
                     "placements": result["placements"],
@@ -105,6 +110,12 @@ def run_benchmarks(iterations: int = 5) -> dict:
                 "unplaced": result["unplaced"],
                 "utilization_percent": round(result["utilization"] * 100, 2),
                 "deterministic": True,
+                "geometry_valid": validation["valid"],
+                "checked_pairs": validation["checked_pairs"],
+                "completion_percent": metrics["completion_percent"],
+                "placed_part_area": metrics["placed_part_area"],
+                "usable_area_percent": metrics["usable_area_percent"],
+                "unplaced_ids": metrics["unplaced_ids"],
             })
     return {
         "benchmark_version": 2,
