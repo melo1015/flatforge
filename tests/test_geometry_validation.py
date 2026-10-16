@@ -84,6 +84,8 @@ def test_rejects_contour_shape_mutation_even_when_area_and_bounds_are_preserved(
     # Change the notch while preserving overall bounds, vertex count and area.
     broken["placements"][0]["points"][3][0] = 7
     broken["placements"][0]["points"][4][0] = 7
+    broken["placements"][0]["points"][5][0] = 5
+    broken["placements"][0]["points"][6][0] = 5
     with pytest.raises(ValueError, match="contour shape changed"):
         validate_nesting_result(request, broken)
 
