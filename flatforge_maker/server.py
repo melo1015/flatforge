@@ -25,7 +25,7 @@ PORT = 8787
 
 
 class MakerHandler(BaseHTTPRequestHandler):
-    server_version = "FlatForgeMaker/0.5"
+    server_version = "FlatForgeMaker/0.6"
 
     def _send_bytes(self, status: int, body: bytes, content_type: str) -> None:
         self.send_response(status)
@@ -43,7 +43,7 @@ class MakerHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
         path = urlparse(self.path).path
         if path == "/api/health":
-            self._send_json(200, {"ok": True, "service": "flatforge-maker", "version": "0.5"})
+            self._send_json(200, {"ok": True, "service": "flatforge-maker", "version": "0.6"})
             return
 
         allowed_files = {
