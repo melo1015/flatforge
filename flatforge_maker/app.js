@@ -84,7 +84,14 @@
       invalidateLayout();
     });
 
-    if (Array.isArray(part.points)) {\n      row.dataset.svgImported = "true";\n      name.disabled = true;\n      width.disabled = true;\n      height.disabled = true;\n    }\n\n    [name, width, height].forEach((input) => {
+    if (Array.isArray(part.points)) {
+      row.dataset.svgImported = "true";
+      name.disabled = true;
+      width.disabled = true;
+      height.disabled = true;
+    }
+
+    [name, width, height].forEach((input) => {
       input.addEventListener("input", () => {
         updatePartCount();
         invalidateLayout();
@@ -146,7 +153,8 @@
           !Number.isFinite(height) || height <= 0 || height > 100000) {
         throw new Error(`Revisa el ancho y el alto de "${id}". Deben ser valores positivos.`);
       }
-      const outline = importedOutlines.find((item) => item.id === id);\n      return outline ? { id, width, height, points: outline.points } : { id, width, height };
+      const outline = importedOutlines.find((item) => item.id === id);
+      return outline ? { id, width, height, points: outline.points } : { id, width, height };
     });
 
     return {
