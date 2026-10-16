@@ -38,7 +38,7 @@ This is a heuristic, not a proof of optimal packing. It supports rectangular par
 ## Important limitations
 
 - Utilization is the sum of placed rectangular part areas divided by the full sheet area. The displayed leftover area does not subtract the margin and does not account for kerf, tabs, clamps, grain direction, lead-ins, or machine constraints.
-- SVG export includes placed part outlines only. The sheet boundary, margin guide, and preview labels are omitted from the exported cutting paths. SVG dimensions are expressed in `mm`; still verify the import scale in the target software.
+- SVG export includes placed part outlines only, as unfilled black strokes with a nominal 0.1 mm stroke width. The sheet boundary, margin guide, preview labels, and colored preview fills are omitted from the exported cutting paths. SVG dimensions are expressed in `mm`; still verify the import scale in the target software.
 - A partial layout can be exported if at least one part fits. Unplaced parts are not included in the SVG.
 - This is a prototype, not a certified manufacturing workflow. Always inspect the generated file before cutting.
 
