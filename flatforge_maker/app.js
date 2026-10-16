@@ -244,7 +244,7 @@
     const placed = result.placements?.length ?? 0;
     const total = result.part_count ?? request.parts.length;
     const utilization = Number(result.utilization || 0);
-    const usedArea = (result.placements || []).reduce((sum, part) => sum + Number(part.width) * Number(part.height), 0);
+    const usedArea = (result.placements || []).reduce((sum, part) => sum + Number(part.area ?? (Number(part.width) * Number(part.height))), 0);
     const totalArea = sheetWidth * sheetHeight;
     const waste = Math.max(0, totalArea - usedArea);
 
