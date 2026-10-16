@@ -22,7 +22,7 @@ def test_client_round_trip_and_unique_request_ids():
                 "jsonrpc": "2.0",
                 "id": request["id"],
                 "result": {"ok": True},
-            }) + "\\n").encode())
+            }) + "\n").encode())
             await writer.drain()
             writer.close()
             await writer.wait_closed()
@@ -45,7 +45,7 @@ def test_client_rejects_mismatched_response_id():
     async def scenario():
         async def handler(reader, writer):
             await reader.readline()
-            writer.write(b'{"jsonrpc":"2.0","id":999,"result":{}}\\n')
+            writer.write(b'{"jsonrpc":"2.0","id":999,"result":{}}\n')
             await writer.drain()
             writer.close()
             await writer.wait_closed()
@@ -68,7 +68,7 @@ def test_client_surfaces_remote_error():
         async def handler(reader, writer):
             request = json.loads(await reader.readline())
             response = {"jsonrpc": "2.0", "id": request["id"], "error": {"code": -32601, "message": "Method not found"}}
-            writer.write((json.dumps(response) + "\\n").encode())
+            writer.write((json.dumps(response) + "\n").encode())
             await writer.drain()
             writer.close()
             await writer.wait_closed()
