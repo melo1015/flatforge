@@ -71,6 +71,23 @@ def test_rejects_contour_area_mutation():
         validate_nesting_result(request, broken)
 
 
+def test_rejects_contour_shape_mutation_even_when_area_and_bounds_are_preserved():
+    request = {
+        "sheet_width": 60, "sheet_height": 60,
+        "parts": [{
+            "id": "concave",
+            "points": [[0, 0], [10, 0], [10, 10], [6, 10], [6, 4], [4, 4], [4, 10], [0, 10]],
+        }],
+    }
+    result = nest_parts(request)
+    broken = copy.deepcopy(result)
+    # Change the notch while preserving overall bounds, vertex count and area.
+    broken["placements"][0]["points"][3][0] = 7
+    broken["placements"][0]["points"][4][0] = 7
+    with pytest.raises(ValueError, match="contour shape changed"):
+        validate_nesting_result(request, broken)
+
+
 def test_rejects_missing_part_accounting():
     request = {"sheet_width": 30, "sheet_height": 30, "parts": [{"id": "a", "width": 5, "height": 5}]}
     result = nest_parts(request)
