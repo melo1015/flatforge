@@ -246,13 +246,13 @@ Los ejemplos de protocolo de esta sección se pueden enviar con el cliente TCP a
 4. En Blender, instala/activa el complemento de FlatForge desde el código del repositorio según el flujo de instalación de complementos de tu versión.
 5. Selecciona un objeto de tipo malla y ejecuta el operador de desplegado de FlatForge.
 
-**Comprobación de integración automatizada:** desde la raíz del repositorio, con el worker activo, ejecuta:
+**Prueba automatizada opcional:** la rama de integración `test/clean-install-blender-smoke` contiene el script `scripts/blender_smoke_test.py`; no está presente en `main` mientras esa integración siga pendiente. Si tienes esa rama o el script ya está integrado, ejecuta desde la raíz del repositorio, con el worker activo:
 
 ```bash
 blender --background --factory-startup --python scripts/blender_smoke_test.py
 ```
 
-El script está diseñado para comprobar que Blender puede registrar el complemento, conectar con el worker y crear una malla plana a partir de un cubo de prueba. Requiere que el ejecutable `blender` esté disponible en PATH; en Windows puedes indicar la ruta completa a `blender.exe`.
+El script comprueba el registro del complemento, la conexión con el worker y la creación de una malla plana a partir de un cubo de prueba. Requiere que el ejecutable `blender` esté disponible en PATH; en Windows puedes indicar la ruta completa a `blender.exe`. Esta prueba debe ejecutarse realmente con Blender; una CI basada solo en Python no demuestra la compatibilidad de Blender.
 
 **Petición directa equivalente:**
 
