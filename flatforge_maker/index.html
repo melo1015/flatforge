@@ -24,9 +24,9 @@
   <main class="page-shell">
     <section class="intro">
       <div>
-        <p class="eyebrow">TALLER DIGITAL · VERSIÓN 0.4</p>
+        <p class="eyebrow">TALLER DIGITAL · VERSIÓN 0.5</p>
         <h1>Prepara tu próxima <span>lámina de corte.</span></h1>
-        <p class="intro-copy">Distribuye piezas rectangulares, revisa el aprovechamiento del material y exporta un SVG con dimensiones en milímetros.</p>
+        <p class="intro-copy">Importa contornos SVG, revisa sus dimensiones y distribuye cajas rectangulares sobre una lámina. El anidado poligonal real sigue en desarrollo.</p>
       </div>
       <div class="intro-chip"><span aria-hidden="true">✳</span> Prototipo de fabricación</div>
     </section>
@@ -54,8 +54,16 @@
             <label class="toggle-row" for="allowRotation"><span><strong>Permitir giro de 90°</strong><small>Puede ayudar a colocar más piezas.</small></span><input id="allowRotation" name="allowRotation" type="checkbox" checked><span class="toggle-ui" aria-hidden="true"></span></label>
           </fieldset>
 
+          <fieldset class="field-group import-group">
+            <legend><span class="step-number">02</span> Importar contornos SVG</legend>
+            <label class="import-label" for="svgImportFile">Archivo SVG de piezas</label>
+            <input id="svgImportFile" type="file" accept=".svg,image/svg+xml">
+            <p class="helper-note">Admite rectángulos, polígonos y polilíneas cerradas simples. Se rechazan scripts, transformaciones y rutas no compatibles.</p>
+            <p id="importSummary" class="import-summary" role="status" aria-live="polite" hidden></p>
+          </fieldset>
+
           <fieldset class="field-group parts-group">
-            <div class="legend-row"><legend><span class="step-number">02</span> Piezas a fabricar</legend><span id="partCount" class="count-pill">4 piezas</span></div>
+            <div class="legend-row"><legend><span class="step-number">03</span> Piezas a fabricar</legend><span id="partCount" class="count-pill">4 piezas</span></div>
             <div class="parts-header" aria-hidden="true"><span>Nombre</span><span>Ancho (mm)</span><span>Alto (mm)</span><span></span></div>
             <div id="partsList" class="parts-list"></div>
             <button id="addPartButton" class="add-part-button" type="button"><span aria-hidden="true">＋</span> Añadir pieza</button>
@@ -101,7 +109,7 @@
         </div>
 
         <div class="export-row">
-          <div><strong>¿Listo para revisar?</strong><small>Exporta el contorno de la lámina y las piezas en SVG.</small></div>
+          <div><strong>¿Listo para revisar?</strong><small>Exporta las cajas rectangulares de las piezas colocadas; no son contornos poligonales finales.</small></div>
           <button id="exportButton" class="export-button" type="button" disabled><span aria-hidden="true">↓</span> Exportar SVG</button>
         </div>
         <p class="safety-note"><span aria-hidden="true">ⓘ</span> Comprueba la escala y la separación en el software de corte antes de fabricar. Esta versión no compensa el ancho del láser (kerf).</p>
