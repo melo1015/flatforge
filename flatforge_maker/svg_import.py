@@ -70,7 +70,7 @@ def import_svg_outlines(source: str) -> dict:
             raise ValueError("Nested SVG elements are not supported")
         for attribute in element.attrib:
             local = attribute.rsplit("}", 1)[-1].lower()
-            if local.startswith("on") or local in {"transform", "style", "href", "id", "class"}:
+            if local.startswith("on") or local in {"transform", "style", "href", "class"}:
                 raise ValueError(f"Attribute '{local}' is unsupported for safe geometry import")
 
         if tag == "rect":
