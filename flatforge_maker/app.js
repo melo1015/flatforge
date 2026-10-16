@@ -84,7 +84,7 @@
       invalidateLayout();
     });
 
-    [name, width, height].forEach((input) => {
+    if (Array.isArray(part.points)) {\n      row.dataset.svgImported = "true";\n      name.disabled = true;\n      width.disabled = true;\n      height.disabled = true;\n    }\n\n    [name, width, height].forEach((input) => {
       input.addEventListener("input", () => {
         updatePartCount();
         invalidateLayout();
@@ -146,7 +146,7 @@
           !Number.isFinite(height) || height <= 0 || height > 100000) {
         throw new Error(`Revisa el ancho y el alto de "${id}". Deben ser valores positivos.`);
       }
-      return { id, width, height };
+      const outline = importedOutlines.find((item) => item.id === id);\n      return outline ? { id, width, height, points: outline.points } : { id, width, height };
     });
 
     return {
@@ -198,15 +198,27 @@
       const height = Number(placement.height);
       const strokeWidth = Math.max(Math.min(sheetWidth, sheetHeight) / 900, 0.15);
       const group = makeSvgElement("g", { "data-part": String(placement.id) });
-      group.appendChild(makeSvgElement("rect", {
-        x, y, width, height,
-        fill: palette[index % palette.length],
-        "fill-opacity": "0.20",
-        stroke: palette[index % palette.length],
-        "stroke-width": strokeWidth,
-        "vector-effect": "non-scaling-stroke",
-        "data-cut-line": "true"
-      }));
+      if (Array.isArray(placement.points) && placement.points.length >= 3) {
+        group.appendChild(makeSvgElement("polygon", {
+          points: placement.points.map((point) => `${point[0]},${point[1]}`).join(" "),
+          fill: palette[index % palette.length],
+          "fill-opacity": "0.20",
+          stroke: palette[index % palette.length],
+          "stroke-width": strokeWidth,
+          "vector-effect": "non-scaling-stroke",
+          "data-cut-line": "true"
+        }));
+      } else {
+        group.appendChild(makeSvgElement("rect", {
+          x, y, width, height,
+          fill: palette[index % palette.length],
+          "fill-opacity": "0.20",
+          stroke: palette[index % palette.length],
+          "stroke-width": strokeWidth,
+          "vector-effect": "non-scaling-stroke",
+          "data-cut-line": "true"
+        }));
+      }
 
       if (width > Math.min(sheetWidth, sheetHeight) * 0.07 &&
           height > Math.min(sheetWidth, sheetHeight) * 0.045) {
