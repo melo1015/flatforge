@@ -295,6 +295,14 @@
     if (!lastResult || !lastRequest || !lastResult.placements?.length) return;
     const exported = sheetSvg.cloneNode(true);
     exported.querySelectorAll('[data-guide="true"], [data-preview-only="true"]').forEach((element) => element.remove());
+    // Export neutral, unfilled vector outlines rather than the colored preview style.
+    exported.querySelectorAll('[data-cut-line="true"]').forEach((element) => {
+      element.setAttribute("fill", "none");
+      element.setAttribute("stroke", "#000000");
+      element.setAttribute("stroke-width", "0.1");
+      element.removeAttribute("fill-opacity");
+      element.removeAttribute("vector-effect");
+    });
     exported.setAttribute("xmlns", SVG_NS);
     exported.setAttribute("width", `${lastRequest.sheet_width}mm`);
     exported.setAttribute("height", `${lastRequest.sheet_height}mm`);
