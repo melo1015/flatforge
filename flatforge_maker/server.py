@@ -15,6 +15,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from flatforge_worker.engines.nesting import nest_parts
+from flatforge_worker.engines.geometry_validation import validate_nesting_result
 from flatforge_maker.svg_export import render_cut_svg
 from flatforge_maker.svg_import import import_svg_outlines
 
@@ -100,6 +101,8 @@ class MakerHandler(BaseHTTPRequestHandler):
                 self._send_json(200, imported)
                 return
             result = nest_parts(payload)
+            validation = validate_nesting_result(payload, result)
+            result["validation"] = validation
             if path == "/api/export.svg":
                 body = render_cut_svg(result)
                 self.send_response(200)
