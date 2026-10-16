@@ -17,6 +17,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from flatforge_worker.engines.nesting import nest_parts
+from flatforge_worker.engines.polygon_nesting import nest_polygon_parts
 
 
 CASES = [
@@ -70,39 +71,50 @@ def run_benchmarks(iterations: int = 5) -> dict:
         raise ValueError("iterations must be an integer >= 1")
     results = []
     for case in CASES:
-        samples = []
-        reference = None
-        for _ in range(iterations):
-            started = time.perf_counter()
-            result = nest_parts(case["request"])
-            samples.append((time.perf_counter() - started) * 1000)
-            stable = {
-                "status": result["status"],
-                "placements": result["placements"],
+        modes = ("compact_envelope", "bottom_left") if case["name"] == "polygons_mixed" else (None,)
+        for mode in modes:
+            samples = []
+            reference = None
+            for _ in range(iterations):
+                started = time.perf_counter()
+                result = (
+                    nest_polygon_parts(case["request"], scoring=mode)
+                    if mode is not None else nest_parts(case["request"])
+                )
+                samples.append((time.perf_counter() - started) * 1000)
+                stable = {
+                    "status": result["status"],
+                    "placements": result["placements"],
+                    "unplaced": result["unplaced"],
+                    "utilization": result["utilization"],
+                }
+                if reference is not None and stable != reference:
+                    raise AssertionError(
+                        f"non-deterministic result for {case['name']} ({mode or 'default'})"
+                    )
+                reference = stable
+            results.append({
+                "case": case["name"],
+                "comparison": mode or "default",
+                "algorithm": result["algorithm"],
+                "iterations": iterations,
+                "median_ms": round(statistics.median(samples), 3),
+                "min_ms": round(min(samples), 3),
+                "placed": result["placed_count"],
+                "total": result["part_count"],
                 "unplaced": result["unplaced"],
-                "utilization": result["utilization"],
-            }
-            if reference is not None and stable != reference:
-                raise AssertionError(f"non-deterministic result for benchmark case {case['name']}")
-            reference = stable
-        results.append({
-            "case": case["name"],
-            "algorithm": result["algorithm"],
-            "iterations": iterations,
-            "median_ms": round(statistics.median(samples), 3),
-            "min_ms": round(min(samples), 3),
-            "placed": result["placed_count"],
-            "total": result["part_count"],
-            "unplaced": result["unplaced"],
-            "utilization_percent": round(result["utilization"] * 100, 2),
-            "deterministic": True,
-        })
+                "utilization_percent": round(result["utilization"] * 100, 2),
+                "deterministic": True,
+            })
     return {
-        "benchmark_version": 1,
-        "note": "Runtime is machine-dependent; compare quality metrics on the same machine and Python version.",
+        "benchmark_version": 2,
+        "note": (
+            "Runtime is machine-dependent. The polygon case compares the current compact-envelope "
+            "score with the pre-0.7 bottom-left score on identical input; this is a heuristic "
+            "comparison, not proof of global optimality."
+        ),
         "results": results,
     }
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
