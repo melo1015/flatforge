@@ -8,7 +8,7 @@ FlatForge is a modular Python prototype for geometry workflows through a newline
 - **flatforge_worker** — bounded threaded TCP server and geometry method dispatcher.
 - **flatforge_worker/engines** — mesh unfolding, rectangular shelf nesting, and mesh-plane section extraction for rib planning.
 - **flatforge_mcp** — MCP tools and an asynchronous TCP client.
-- **flatforge_worker/addon** — starter Blender add-on package; Blender lifecycle integration is not yet complete.
+- **flatforge_worker/addon** — Blender add-on with registration, worker health check, and selected-mesh unfolding operator; Blender-version integration still needs in-Blender verification.
 
 ## Requirements
 
