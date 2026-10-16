@@ -136,10 +136,16 @@ def nest_polygon_parts(params):
                 if x<margin-EPS or y<margin-EPS or x+w2>sw-margin+EPS or y+h2>sh-margin+EPS: continue
                 points=[(round(x+px,6),round(y+py,6)) for px,py in poly]
                 if any(_conflict(points,ex["points"],gap) for ex in placed): continue
-                score=(y,x,rotated)
+                # Prefer placements that keep the occupied envelope compact. This
+                # improves on pure bottom-left selection without claiming optimality.
+                all_points=[point for ex in placed for point in ex["points"]]+points
+                min_x=min(p[0] for p in all_points); min_y=min(p[1] for p in all_points)
+                max_x=max(p[0] for p in all_points); max_y=max(p[1] for p in all_points)
+                envelope_w=max_x-min_x; envelope_h=max_y-min_y
+                score=(envelope_w*envelope_h, envelope_w+envelope_h, max_y, max_x, y, x, rotated)
                 if best is None or score<best[0]: best=(score,x,y,w2,h2,rotated,points)
         if best is None: unplaced.append(part["id"]); continue
         _,x,y,w2,h2,rotated,points=best
         placed.append({"id":part["id"],"x":round(x,6),"y":round(y,6),"width":round(w2,6),"height":round(h2,6),"rotated_90":rotated,"points":[[x,y] for x,y in points],"area":round(part["area"],6)})
     area=sum(p["area"] for p in placed)
-    return {"status":"partial" if unplaced else "ok","algorithm":"polygon_vertex_alignment_heuristic","sheet":{"width":sw,"height":sh,"margin":margin,"gap":gap},"placements":placed,"unplaced":unplaced,"utilization":round(area/(sw*sh),6),"placed_count":len(placed),"part_count":len(normalized),"warning":"Heurística poligonal por alineación de vértices para contornos simples sin agujeros; no garantiza óptimo. Verifica tolerancias, escala y ajustes de corte antes de fabricar."}
+    return {"status":"partial" if unplaced else "ok","algorithm":"polygon_vertex_alignment_compact_envelope","sheet":{"width":sw,"height":sh,"margin":margin,"gap":gap},"placements":placed,"unplaced":unplaced,"utilization":round(area/(sw*sh),6),"placed_count":len(placed),"part_count":len(normalized),"warning":"Heurística poligonal por alineación de vértices y envolvente compacta para contornos simples sin agujeros; no garantiza óptimo. Verifica tolerancias, escala y ajustes de corte antes de fabricar."}
