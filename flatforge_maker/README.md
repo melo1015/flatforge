@@ -1,4 +1,4 @@
-# FlatForge Maker 0.5
+# FlatForge Maker 0.6
 
 FlatForge Maker is an early, local-only web interface for rectangular sheet nesting. It provides a visual sheet preview, configurable sheet dimensions, margin and spacing, 90-degree rotation, a placed/unplaced summary, and SVG export using millimetres.
 
@@ -33,12 +33,12 @@ Stop the server with Ctrl+C.
 
 The engine uses a deterministic **MaxRects-style best-short-side-fit heuristic**. It evaluates both orientations when rotation is enabled, maintains free rectangular regions, and scores candidate placements by the short and long leftover sides. The implementation is bounded to 500 parts per request to keep local calculations predictable.
 
-This is a heuristic, not a proof of optimal packing. It supports rectangular parts only; it does not support arbitrary polygon outlines or nesting of parts with holes.
+This is a heuristic, not a proof of optimal packing. Polygon requests are handled by a separate vertex-alignment heuristic for simple, hole-free contours; it is not an optimal solver.
 
 ## Important limitations
 
 - Utilization is the sum of placed rectangular part areas divided by the full sheet area. The displayed leftover area does not subtract the margin and does not account for kerf, tabs, clamps, grain direction, lead-ins, or machine constraints.
-- SVG export is generated server-side from the nesting result and includes placed part outlines only, as unfilled black strokes with a nominal 0.1 mm stroke width. The sheet boundary, margin guide, preview labels, and colored preview fills are omitted. The exporter checks that each placement remains within the usable sheet. SVG dimensions are expressed in `mm`; still verify the import scale in the target software.
+- SVG export is generated server-side from the nesting result and includes placed rectangular or polygonal part contours only, as unfilled black strokes with a nominal 0.1 mm stroke width. The sheet boundary, margin guide, preview labels, and colored preview fills are omitted. The exporter checks that each placement remains within the usable sheet. SVG dimensions are expressed in `mm`; still verify the import scale in the target software.
 - A partial layout can be exported if at least one part fits. Unplaced parts are not included in the SVG.
 - This is a prototype, not a certified manufacturing workflow. Always inspect the generated file before cutting.
 
@@ -48,7 +48,7 @@ The server binds to `127.0.0.1:8787` only. It has no TLS, user authentication, C
 
 ## Next steps
 
-- Use imported polygon outlines in a true polygon nesting engine and export original contours.
+- Add robust SVG path/curve support, holes, arbitrary-angle rotations, and machine-specific kerf compensation.
 - Add machine-specific kerf compensation and toolpath settings.
 - Improve preview selection, dimensions, and warnings.
 - Add DXF support and project persistence.
