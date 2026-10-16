@@ -6,7 +6,7 @@ FlatForge is a modular Python prototype for geometry workflows through a newline
 
 - **flatforge_proto** — JSON-RPC request validation, shared method names and protocol errors.
 - **flatforge_worker** — bounded threaded TCP server and geometry method dispatcher.
-- **flatforge_worker/engines** — mesh unfolding, rectangular shelf nesting, and mesh-plane section extraction for rib planning.
+- **flatforge_worker/engines** — mesh unfolding, rectangular MaxRects-style nesting, and mesh-plane section extraction for rib planning.
 - **flatforge_mcp** — MCP tools and an asynchronous TCP client.
 - **flatforge_worker/addon** — Blender add-on with registration, worker health check, and selected-mesh unfolding operator; Blender-version integration still needs in-Blender verification.
 
@@ -57,6 +57,6 @@ See [protocol](docs/protocol.md), [MCP tools](docs/mcp_tools.md), [deployment](d
 
 ## Safety and limitations
 
-This is not a certified CAD/CAM or structural-analysis system. Unfolding does not optimize cuts or detect self-overlap; nesting uses a rectangular shelf heuristic; rib planning returns section segments rather than closed rib solids. Blender integration is incomplete. Do not use outputs for safety-critical fabrication without independent verification.
+This is not a certified CAD/CAM or structural-analysis system. Unfolding does not optimize cuts or detect self-overlap; nesting uses a rectangular MaxRects-style heuristic, not optimal polygon nesting; rib planning returns section segments rather than closed rib solids. Blender integration is incomplete. Do not use outputs for safety-critical fabrication without independent verification.
 
 The worker supports optional shared-token authentication through `FLATFORGE_TOKEN`, but the TCP transport has no TLS. Keep it on a trusted private network and do not expose its port directly to the internet; use a TLS-capable private proxy or secure tunnel for remote access. Docker Compose contains only the worker and MCP bridge. PostgreSQL was removed until durable persistence is actually implemented.
