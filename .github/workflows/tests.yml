@@ -30,3 +30,14 @@ jobs:
         env:
           PYTHONPATH: .
         run: python -m pytest -q
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Docker Compose configuration
+        run: docker compose config --quiet
+      - name: Build worker image
+        run: docker build --pull -f Dockerfile.worker -t flatforge-worker:ci .
+      - name: Build MCP image
+        run: docker build --pull -f Dockerfile.mcp -t flatforge-mcp:ci .
