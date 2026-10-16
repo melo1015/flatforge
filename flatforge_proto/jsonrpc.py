@@ -20,6 +20,10 @@ class ProtocolError(ValueError):
         self.code = code
 
 
+def _reject_constant(value: str):
+    raise ProtocolError(f"Non-standard JSON constant is not allowed: {value}", PARSE_ERROR)
+
+
 def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     result: dict[str, Any] = {}
     for key, value in pairs:
@@ -85,9 +89,9 @@ def parse_message(raw: str | bytes, *, max_bytes: int = MAX_MESSAGE_BYTES) -> di
     else:
         raise ProtocolError("Message must be text or bytes", PARSE_ERROR)
     try:
-        message = json.loads(raw, object_pairs_hook=_reject_duplicate_keys)
+        message = json.loads(raw, object_pairs_hook=_reject_duplicate_keys, parse_constant=_reject_constant)
     except ProtocolError:
         raise
-    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+    except (json.JSONDecodeError, UnicodeDecodeError, RecursionError) as exc:
         raise ProtocolError("Invalid JSON payload", PARSE_ERROR) from exc
     return validate_request(message)
