@@ -49,3 +49,8 @@ def test_reject_oversized_message():
 
 def test_notification_omits_id():
     assert "id" not in make_request("system.ping", {}, None)
+
+
+def test_reject_non_standard_nan_constant():
+    with pytest.raises(ProtocolError):
+        parse_message('{"jsonrpc":"2.0","method":"system.ping","params":{"x":NaN},"id":1}')
