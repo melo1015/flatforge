@@ -142,3 +142,27 @@ def test_svg_export_endpoint_rejects_when_no_part_fits(maker_server):
     assert status == 400
     assert content_type.startswith("application/json")
     assert "no placed parts" in json.loads(body)["error"]
+
+
+def test_svg_import_endpoint_preserves_polygon_points(maker_server):
+    payload = {"svg": '<svg xmlns="http://www.w3.org/2000/svg"><polygon id="triangle" points="0,0 20,0 10,15"/></svg>'}
+    status, content_type, body = request(
+        maker_server, "POST", "/api/import.svg", body=json.dumps(payload),
+        headers={"Content-Type": "application/json"},
+    )
+    assert status == 200
+    assert content_type.startswith("application/json")
+    result = json.loads(body)
+    assert result["count"] == 1
+    assert result["outlines"][0]["id"] == "triangle"
+    assert result["outlines"][0]["points"] == [[0, 0], [20, 0], [10, 15]]
+
+
+def test_svg_import_endpoint_rejects_script(maker_server):
+    payload = {"svg": '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'}
+    status, content_type, body = request(
+        maker_server, "POST", "/api/import.svg", body=json.dumps(payload),
+        headers={"Content-Type": "application/json"},
+    )
+    assert status == 400
+    assert content_type.startswith("application/json")
