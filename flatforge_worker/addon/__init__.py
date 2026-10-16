@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import socket
 
 import bpy
@@ -23,7 +24,11 @@ MAX_MESSAGE_BYTES = 1_048_576
 
 
 def _worker_call(method: str, params: dict, timeout: float = 30.0) -> dict:
-    request = {"jsonrpc": "2.0", "id": 1, "method": method, "params": params}
+    request_params = dict(params)
+    token = os.getenv("FLATFORGE_TOKEN")
+    if token:
+        request_params["_auth"] = token
+    request = {"jsonrpc": "2.0", "id": 1, "method": method, "params": request_params}
     payload = (json.dumps(request, separators=(",", ":")) + "\n").encode("utf-8")
     if len(payload) > MAX_MESSAGE_BYTES:
         raise ValueError("Request exceeds FlatForge's message size limit")
