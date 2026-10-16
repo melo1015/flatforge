@@ -13,7 +13,7 @@ def _request(port, params):
         "params": params,
     }
     with socket.create_connection(("127.0.0.1", port), timeout=2) as conn:
-        conn.sendall((json.dumps(payload) + "\\n").encode())
+        conn.sendall((json.dumps(payload) + "\n").encode())
         with conn.makefile("rb") as stream:
             return json.loads(stream.readline())
 
@@ -43,7 +43,7 @@ def test_worker_maps_unknown_method_to_jsonrpc_error(monkeypatch):
     try:
         payload = {"jsonrpc": "2.0", "id": 2, "method": "no.such.method", "params": {}}
         with socket.create_connection(("127.0.0.1", server.server_address[1]), timeout=2) as conn:
-            conn.sendall((json.dumps(payload) + "\\n").encode())
+            conn.sendall((json.dumps(payload) + "\n").encode())
             with conn.makefile("rb") as stream:
                 response = json.loads(stream.readline())
         assert response["error"]["code"] == -32601
