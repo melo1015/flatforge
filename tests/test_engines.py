@@ -77,3 +77,18 @@ def test_ribs_returns_mesh_plane_intersection_segments():
 def test_ribs_rejects_invalid_axis():
     with pytest.raises(ValueError):
         generate_ribs({"mesh": {"vertices": [[0, 0, 0]], "faces": [[0, 0, 0]]}, "axis": "q"})
+
+
+def test_unfold_duplicates_corners_across_faces_to_preserve_cut_seams():
+    result = unfold_mesh({
+        "mesh": {
+            "vertices": [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, -1, 0]],
+            "faces": [[0, 1, 2], [1, 0, 3]],
+        }
+    })
+    assert len(result["vertices_2d"]) == 6
+    assert len(result["triangles_2d"]) == 2
+    points = result["vertices_2d"]
+    first_edge = {v["source_vertex"]: (v["x"], v["y"]) for v in points[:3] if v["source_vertex"] in (0, 1)}
+    second_edge = {v["source_vertex"]: (v["x"], v["y"]) for v in points[3:] if v["source_vertex"] in (0, 1)}
+    assert first_edge == second_edge
