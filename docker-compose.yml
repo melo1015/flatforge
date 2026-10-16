@@ -6,6 +6,7 @@ services:
     environment:
       FLATFORGE_HOST: 0.0.0.0
       FLATFORGE_PORT: 8765
+      FLATFORGE_TOKEN: ${FLATFORGE_TOKEN:-}
     ports:
       - "127.0.0.1:8765:8765"
   mcp:
@@ -15,6 +16,7 @@ services:
     environment:
       FLATFORGE_HOST: worker
       FLATFORGE_PORT: 8765
+      FLATFORGE_TOKEN: ${FLATFORGE_TOKEN:-}
     depends_on:
       - worker
   postgres:
