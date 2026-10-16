@@ -24,9 +24,9 @@
   <main class="page-shell">
     <section class="intro">
       <div>
-        <p class="eyebrow">TALLER DIGITAL · VERSIÓN 0.5</p>
+        <p class="eyebrow">TALLER DIGITAL · VERSIÓN 0.6</p>
         <h1>Prepara tu próxima <span>lámina de corte.</span></h1>
-        <p class="intro-copy">Importa contornos SVG, revisa sus dimensiones y distribuye cajas rectangulares sobre una lámina. El anidado poligonal real sigue en desarrollo.</p>
+        <p class="intro-copy">Importa contornos SVG simples y distribuye las piezas por sus vértices reales. Los contornos con agujeros y curvas aún no están soportados.</p>
       </div>
       <div class="intro-chip"><span aria-hidden="true">✳</span> Prototipo de fabricación</div>
     </section>
@@ -58,7 +58,7 @@
             <legend><span class="step-number">02</span> Importar contornos SVG</legend>
             <label class="import-label" for="svgImportFile">Archivo SVG de piezas</label>
             <input id="svgImportFile" type="file" accept=".svg,image/svg+xml">
-            <p class="helper-note">Admite rectángulos, polígonos y polilíneas cerradas simples. Se rechazan scripts, transformaciones y rutas no compatibles.</p>
+            <p class="helper-note">Admite rectángulos, polígonos y polilíneas cerradas simples. El motor conserva contornos sin agujeros; se rechazan scripts, transformaciones y rutas no compatibles.</p>
             <p id="importSummary" class="import-summary" role="status" aria-live="polite" hidden></p>
           </fieldset>
 
@@ -70,7 +70,7 @@
           </fieldset>
 
           <button id="calculateButton" class="primary-button" type="submit"><span aria-hidden="true">✳</span> Calcular distribución <span aria-hidden="true">→</span></button>
-          <p class="helper-note">El motor usa una heurística MaxRects para rectángulos; no garantiza la distribución óptima.</p>
+          <p class="helper-note">El motor usa MaxRects para rectángulos y alineación de vértices para polígonos simples. Es heurístico, no óptimo; no admite agujeros ni curvas.</p>
         </form>
       </aside>
 
@@ -109,7 +109,7 @@
         </div>
 
         <div class="export-row">
-          <div><strong>¿Listo para revisar?</strong><small>Exporta las cajas rectangulares de las piezas colocadas; no son contornos poligonales finales.</small></div>
+          <div><strong>¿Listo para revisar?</strong><small>Exporta los contornos colocados. Verifica siempre el resultado en el software de corte antes de fabricar.</small></div>
           <button id="exportButton" class="export-button" type="button" disabled><span aria-hidden="true">↓</span> Exportar SVG</button>
         </div>
         <p class="safety-note"><span aria-hidden="true">ⓘ</span> Comprueba la escala y la separación en el software de corte antes de fabricar. Esta versión no compensa el ancho del láser (kerf).</p>
