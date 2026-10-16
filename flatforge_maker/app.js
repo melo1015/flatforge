@@ -15,6 +15,7 @@
   let lastResult = null;
   let lastRequest = null;
   let partSequence = 0;
+  let importedOutlines = [];
 
   const sampleParts = [
     { id: "Panel A", width: 180, height: 120 },
@@ -341,6 +342,10 @@
     $("#allowRotation").checked = true;
     lastResult = null;
     lastRequest = null;
+    importedOutlines = [];
+    $("#importSummary").hidden = true;
+    $("#importSummary").textContent = "";
+    $("#svgImportFile").value = "";
     exportButton.disabled = true;
     sheetSvg.hidden = true;
     emptyState.hidden = false;
@@ -353,6 +358,59 @@
     $("#unplacedPanel").hidden = true;
     hideNotice();
   }
+
+  $("#svgImportFile").addEventListener("change", async (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const summary = $("#importSummary");
+    summary.hidden = false;
+    summary.textContent = "Validando contornos SVG…";
+    hideNotice();
+    try {
+      if (file.size > 256 * 1024) throw new Error("El SVG supera el límite de importación de 256 KiB.");
+      const svg = await file.text();
+      const response = await fetch("/api/import.svg", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ svg })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || `No se pudo importar el SVG (HTTP ${response.status}).`);
+      if (!Array.isArray(result.outlines) || !result.outlines.length) {
+        throw new Error("El SVG no contiene contornos compatibles.");
+      }
+      const usedNames = new Set();
+      const imported = result.outlines.map((outline, index) => {
+        let id = String(outline.id || `SVG ${index + 1}`).trim().slice(0, 60) || `SVG ${index + 1}`;
+        const base = id;
+        let suffix = 2;
+        while (usedNames.has(id.toLocaleLowerCase())) id = `${base.slice(0, 54)} ${suffix++}`;
+        usedNames.add(id.toLocaleLowerCase());
+        return { ...outline, id };
+      });
+      if (imported.length > 500) throw new Error("El límite de FlatForge Maker es de 500 piezas por cálculo.");
+      partsList.replaceChildren();
+      partSequence = 0;
+      imported.forEach((outline) => createPartRow({
+        id: outline.id, width: outline.width, height: outline.height
+      }));
+      importedOutlines = imported;
+      lastResult = null;
+      lastRequest = null;
+      exportButton.disabled = true;
+      $("#layoutStatus").textContent = "Pendiente de cálculo";
+      $("#layoutStatus").className = "status-pill status-idle";
+      $("#unplacedPanel").hidden = true;
+      summary.textContent = `Importadas ${imported.length} pieza(s). Se conservan ${imported.length} contorno(s) en memoria para revisión. ${result.warning}`;
+      showNotice("Importación validada. Atención: por ahora el cálculo y el SVG de salida usan cajas rectangulares envolventes, no los contornos originales.", "success");
+    } catch (error) {
+      summary.textContent = error.message || "No se pudo validar el archivo SVG.";
+      showNotice(summary.textContent);
+      importedOutlines = [];
+    } finally {
+      event.target.value = "";
+    }
+  });
 
   $("#addPartButton").addEventListener("click", () => {
     if (partsList.querySelectorAll("[data-part-row]").length >= 500) {
