@@ -1,4 +1,4 @@
-"""Deterministic guillotine-style shelf nesting for rectangular 2D parts.
+"""Deterministic shelf nesting for rectangular 2D parts.
 
 This is a practical first-pass layout engine, not an optimal polygon nest.
 Input part records use {id, width, height}; optional sheet_width, sheet_height,
@@ -44,15 +44,8 @@ def nest_parts(params: dict) -> dict:
         seen.add(str(part_id))
         width = _positive_number(part.get("width"), f"parts[{index}].width")
         height = _positive_number(part.get("height"), f"parts[{index}].height")
-        if width > sheet_width - 2 * margin and height > sheet_width - 2 * margin:
-            raise ValueError(f"part {part_id} cannot fit within sheet width")
-        if width > sheet_width - 2 * margin and (not allow_rotation or height > sheet_width - 2 * margin):
-            raise ValueError(f"part {part_id} is wider than the usable sheet")
-        if height > sheet_height - 2 * margin and (not allow_rotation or width > sheet_height - 2 * margin):
-            raise ValueError(f"part {part_id} is taller than the usable sheet")
         normalized.append({"id": part_id, "width": width, "height": height})
 
-    # Place large rectangles first for a deterministic shelf heuristic.
     normalized.sort(key=lambda p: (-max(p["width"], p["height"]), -(p["width"] * p["height"]), str(p["id"])))
     usable_w, usable_h = sheet_width - 2 * margin, sheet_height - 2 * margin
     x = y = row_height = 0.0
@@ -65,14 +58,11 @@ def nest_parts(params: dict) -> dict:
         for width, height, rotated in options:
             if width > usable_w or height > usable_h:
                 continue
-            if x + width > usable_w + 1e-9:
-                continue
-            if y + height > usable_h + 1e-9:
+            if x + width > usable_w + 1e-9 or y + height > usable_h + 1e-9:
                 continue
             placed = (width, height, rotated, x, y)
             break
         if placed is None:
-            # Try a new shelf, using the best orientation that fits.
             new_y = y + row_height + gap if placements else 0.0
             for width, height, rotated in options:
                 if width <= usable_w and height <= usable_h and new_y + height <= usable_h + 1e-9:
@@ -87,12 +77,11 @@ def nest_parts(params: dict) -> dict:
             "id": part["id"], "x": round(margin + px, 6), "y": round(margin + py, 6),
             "width": width, "height": height, "rotated_90": rotated,
         })
-        x = px + width + gap
-        y = py
+        x, y = px + width + gap, py
         row_height = max(row_height, height)
 
-    total_area = sum(p["width"] * p["height"] for p in normalized)
-    placed_area = sum(p["width"] * p["height"] for p in normalized if p["id"] not in unplaced)
+    placed_ids = {str(p["id"]) for p in placements}
+    placed_area = sum(p["width"] * p["height"] for p in normalized if str(p["id"]) in placed_ids)
     return {
         "status": "partial" if unplaced else "ok",
         "algorithm": "rectangular_shelf_heuristic",
