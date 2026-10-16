@@ -27,7 +27,7 @@ Stop the server with Ctrl+C.
 4. Choose whether a part may be rotated by 90 degrees.
 5. Select **Calcular distribución** to call the Python `nest_parts` engine.
 6. Inspect the preview, utilization estimate, and any parts that could not be placed.
-7. Export SVG and verify dimensions and machine settings in your laser/CNC software before manufacturing.
+7. Export SVG. The server recalculates the current request and generates the file independently of the preview DOM; verify dimensions and machine settings in your laser/CNC software before manufacturing.
 
 ## Nesting algorithm
 
@@ -38,7 +38,7 @@ This is a heuristic, not a proof of optimal packing. It supports rectangular par
 ## Important limitations
 
 - Utilization is the sum of placed rectangular part areas divided by the full sheet area. The displayed leftover area does not subtract the margin and does not account for kerf, tabs, clamps, grain direction, lead-ins, or machine constraints.
-- SVG export includes placed part outlines only, as unfilled black strokes with a nominal 0.1 mm stroke width. The sheet boundary, margin guide, preview labels, and colored preview fills are omitted from the exported cutting paths. SVG dimensions are expressed in `mm`; still verify the import scale in the target software.
+- SVG export is generated server-side from the nesting result and includes placed part outlines only, as unfilled black strokes with a nominal 0.1 mm stroke width. The sheet boundary, margin guide, preview labels, and colored preview fills are omitted. The exporter checks that each placement remains within the usable sheet. SVG dimensions are expressed in `mm`; still verify the import scale in the target software.
 - A partial layout can be exported if at least one part fits. Unplaced parts are not included in the SVG.
 - This is a prototype, not a certified manufacturing workflow. Always inspect the generated file before cutting.
 
@@ -52,4 +52,4 @@ The server binds to `127.0.0.1:8787` only. It has no TLS, user authentication, C
 - Add machine-specific kerf compensation and toolpath settings.
 - Improve preview selection, dimensions, and warnings.
 - Add DXF support and project persistence.
-- Add end-to-end tests against actual target machines.
+- Add browser-driven tests and end-to-end tests against actual target machines.
