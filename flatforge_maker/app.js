@@ -404,7 +404,7 @@
       partsList.replaceChildren();
       partSequence = 0;
       imported.forEach((outline) => createPartRow({
-        id: outline.id, width: outline.width, height: outline.height
+        id: outline.id, width: outline.width, height: outline.height, points: outline.points
       }));
       importedOutlines = imported;
       lastResult = null;
