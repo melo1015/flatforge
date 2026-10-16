@@ -87,7 +87,9 @@ def _conflict(a,b,gap):
     return _inside(a[0],b) or _inside(b[0],a)
 
 
-def nest_polygon_parts(params):
+def nest_polygon_parts(params, scoring="compact_envelope"):
+    if scoring not in ("compact_envelope", "bottom_left"):
+        raise ValueError("scoring must be compact_envelope or bottom_left")
     if not isinstance(params,dict): raise ValueError("request must be an object")
     parts=params.get("parts")
     if not isinstance(parts,list) or not parts: raise ValueError("'parts' must be a non-empty list")
@@ -142,10 +144,14 @@ def nest_polygon_parts(params):
                 min_x=min(p[0] for p in all_points); min_y=min(p[1] for p in all_points)
                 max_x=max(p[0] for p in all_points); max_y=max(p[1] for p in all_points)
                 envelope_w=max_x-min_x; envelope_h=max_y-min_y
-                score=(envelope_w*envelope_h, envelope_w+envelope_h, max_y, max_x, y, x, rotated)
+                if scoring == "bottom_left":
+                    # Reproduce the pre-0.7 placement preference for benchmark comparison.
+                    score=(y, x, rotated)
+                else:
+                    score=(envelope_w*envelope_h, envelope_w+envelope_h, max_y, max_x, y, x, rotated)
                 if best is None or score<best[0]: best=(score,x,y,w2,h2,rotated,points)
         if best is None: unplaced.append(part["id"]); continue
         _,x,y,w2,h2,rotated,points=best
         placed.append({"id":part["id"],"x":round(x,6),"y":round(y,6),"width":round(w2,6),"height":round(h2,6),"rotated_90":rotated,"points":[[x,y] for x,y in points],"area":round(part["area"],6)})
     area=sum(p["area"] for p in placed)
-    return {"status":"partial" if unplaced else "ok","algorithm":"polygon_vertex_alignment_compact_envelope","sheet":{"width":sw,"height":sh,"margin":margin,"gap":gap},"placements":placed,"unplaced":unplaced,"utilization":round(area/(sw*sh),6),"placed_count":len(placed),"part_count":len(normalized),"warning":"Heurística poligonal por alineación de vértices y envolvente compacta para contornos simples sin agujeros; no garantiza óptimo. Verifica tolerancias, escala y ajustes de corte antes de fabricar."}
+    return {"status":"partial" if unplaced else "ok","algorithm":("polygon_vertex_alignment_bottom_left_baseline" if scoring == "bottom_left" else "polygon_vertex_alignment_compact_envelope"),"sheet":{"width":sw,"height":sh,"margin":margin,"gap":gap},"placements":placed,"unplaced":unplaced,"utilization":round(area/(sw*sh),6),"placed_count":len(placed),"part_count":len(normalized),"warning":"Heurística poligonal por alineación de vértices y envolvente compacta para contornos simples sin agujeros; no garantiza óptimo. Verifica tolerancias, escala y ajustes de corte antes de fabricar."}
