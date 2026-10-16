@@ -35,7 +35,7 @@ In a second terminal, start the MCP bridge:
 flatforge-mcp
 ```
 
-The worker defaults to `127.0.0.1:8765`. Configure it with `FLATFORGE_HOST`, `FLATFORGE_PORT`, `FLATFORGE_READ_TIMEOUT`, and `FLATFORGE_MAX_CONNECTIONS`. The MCP client supports `FLATFORGE_TIMEOUT`.
+The worker defaults to `127.0.0.1:8765`. Configure it with `FLATFORGE_HOST`, `FLATFORGE_PORT`, `FLATFORGE_READ_TIMEOUT`, `FLATFORGE_MAX_CONNECTIONS`, and optionally `FLATFORGE_TOKEN`. When a token is set, the MCP client and Blender add-on send it automatically from their process environment. The MCP client also supports `FLATFORGE_TIMEOUT`.
 
 ## Geometry input examples
 
@@ -47,4 +47,4 @@ See [protocol](docs/protocol.md), [MCP tools](docs/mcp_tools.md), [deployment](d
 
 This is not a certified CAD/CAM or structural-analysis system. Unfolding does not optimize cuts or detect self-overlap; nesting uses a rectangular shelf heuristic; rib planning returns section segments rather than closed rib solids. Blender integration is incomplete. Do not use outputs for safety-critical fabrication without independent verification.
 
-The worker has no authentication or TLS. Keep it on a trusted private network and do not expose its port directly to the internet. Docker Compose is a development configuration; PostgreSQL is not connected to application code.
+The worker supports optional shared-token authentication through `FLATFORGE_TOKEN`, but the TCP transport has no TLS. Keep it on a trusted private network and do not expose its port directly to the internet; use a TLS-capable private proxy or secure tunnel for remote access. Docker Compose is a development configuration; PostgreSQL is not connected to application code.
