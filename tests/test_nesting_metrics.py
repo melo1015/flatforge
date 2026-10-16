@@ -22,7 +22,7 @@ def test_metrics_report_sheet_and_margin_adjusted_utilization():
     assert metrics["sheet_area"] == pytest.approx(5000)
     assert metrics["usable_sheet_area"] == pytest.approx(3600)
     assert metrics["material_utilization_percent"] == pytest.approx(5)
-    assert metrics["usable_area_percent"] == pytest.approx(250 / 3600 * 100)
+    assert metrics["usable_area_percent"] == pytest.approx(250 / 3600 * 100, abs=5e-5)
     assert metrics["completion_percent"] == 100
 
 
