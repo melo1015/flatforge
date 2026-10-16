@@ -1,4 +1,4 @@
-# FlatForge Maker 0.6
+# FlatForge Maker 0.7
 
 FlatForge Maker is an early, local-only web interface for rectangular and simple polygon sheet nesting. It provides a visual sheet preview, configurable sheet dimensions, margin and spacing, 90-degree rotation, a placed/unplaced summary, and SVG export using millimetres.
 
@@ -29,17 +29,17 @@ Stop the server with Ctrl+C.
 6. Inspect the preview, utilization estimate, and any parts that could not be placed.
 7. Export SVG. The server recalculates the current request and generates the file independently of the preview DOM; verify dimensions and machine settings in your laser/CNC software before manufacturing.
 
-## Importación SVG (0.6)
+## Importación SVG (0.7)
 
 Use **Importar contornos SVG** to load simple outlines. The importer accepts direct-child `rect`, `polygon`, and explicitly closed `polyline` elements. It rejects DTD/entity declarations, scripts, event handlers, transforms, styles, references, nested groups, malformed geometry, and files over 256 KiB. Imported vertices are normalized and retained for the current session.
 
-The polygon engine uses deterministic vertex-alignment candidates and checks polygon-edge distances to prevent overlap and enforce the configured gap. It supports simple closed polygons without holes and 90-degree rotation. It is a heuristic, not an optimal solver; polygon mode is limited to 100 parts and 5,000 total vertices per request. Curves, holes, SVG paths, arbitrary-angle rotation, kerf compensation, and machine-specific toolpaths are not supported. Inspect exported files in the target CAM software before cutting.
+The polygon engine uses deterministic vertex-alignment candidates, scores candidates by occupied-envelope area/perimeter to prefer compact layouts, and checks polygon-edge distances to prevent overlap and enforce the configured gap. It supports simple closed polygons without holes and 90-degree rotation. It is a heuristic, not an optimal solver; polygon mode is limited to 100 parts and 5,000 total vertices per request. Curves, holes, SVG paths, arbitrary-angle rotation, kerf compensation, and machine-specific toolpaths are not supported. Inspect exported files in the target CAM software before cutting.
 
 ## Nesting algorithm
 
 The engine uses a deterministic **MaxRects-style best-short-side-fit heuristic**. It evaluates both orientations when rotation is enabled, maintains free rectangular regions, and scores candidate placements by the short and long leftover sides. The rectangular implementation is bounded to 500 parts per request. Polygon requests are bounded to 100 parts and 5,000 total vertices.
 
-This is a heuristic, not a proof of optimal packing. Polygon requests use a separate vertex-alignment heuristic for simple, hole-free contours.
+This is a heuristic, not a proof of optimal packing. Polygon requests use a separate vertex-alignment heuristic for simple, hole-free contours; candidate placement is scored by envelope compactness before tie-breaking by position. This is a deterministic improvement, not an optimality guarantee.
 
 ## Important limitations
 
