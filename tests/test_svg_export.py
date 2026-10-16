@@ -52,3 +52,22 @@ def test_export_rejects_non_finite_coordinates():
                 {"x": float("nan"), "y": 0, "width": 10, "height": 10},
             ],
         })
+
+
+def test_export_preserves_polygon_cut_contour():
+    from flatforge_maker.svg_export import render_cut_svg
+    import xml.etree.ElementTree as ET
+
+    result = {
+        "sheet": {"width": 100, "height": 80, "margin": 2, "gap": 1},
+        "placements": [{
+            "id": "triangle", "x": 10, "y": 10, "width": 30, "height": 20,
+            "points": [[10, 10], [40, 10], [25, 30]],
+        }],
+    }
+    root = ET.fromstring(render_cut_svg(result))
+    polygon = root.find("{http://www.w3.org/2000/svg}polygon")
+    assert polygon is not None
+    assert polygon.attrib["points"] == "10,10 40,10 25,30"
+    assert polygon.attrib["fill"] == "none"
+    assert polygon.attrib["stroke"] == "#000000"
