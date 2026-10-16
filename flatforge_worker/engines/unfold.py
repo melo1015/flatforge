@@ -1,8 +1,8 @@
 """Triangle-mesh unfolding into 2D using a breadth-first face traversal.
 
-The algorithm preserves each triangle's edge lengths and unfolds a spanning
-forest of face adjacency. It does not optimize cuts or detect self-overlap.
-Mesh schema: {"vertices": [[x,y,z], ...], "faces": [[i,j,k,...], ...]}.
+Each triangle receives its own 2D corner vertices so cut seams can duplicate
+original mesh vertices. Edge lengths are preserved per triangle. This is not
+a cut optimizer and does not detect self-overlap.
 """
 from __future__ import annotations
 
@@ -38,6 +38,8 @@ def unfold_mesh(params: dict) -> dict:
         raise ValueError("mesh.vertices must contain at least three vertices")
     if not isinstance(faces_raw, list) or not faces_raw:
         raise ValueError("mesh.faces must contain at least one face")
+    if len(vertices_raw) > 200000 or len(faces_raw) > 100000:
+        raise ValueError("mesh exceeds the supported size limit")
     vertices = [_vec3(v, f"vertices[{i}]") for i, v in enumerate(vertices_raw)]
     triangles = []
     for fi, face in enumerate(faces_raw):
@@ -64,9 +66,10 @@ def unfold_mesh(params: dict) -> dict:
             adjacency[a].append((b, edge))
             adjacency[b].append((a, edge))
 
-    coords = {}
+    face_coords = {}
     placed_faces = set()
-    components = []
+    component_roots = []
+    cut_edges = []
     component_offset = 0.0
     for root, tri in enumerate(triangles):
         if root in placed_faces:
@@ -81,23 +84,30 @@ def unfold_mesh(params: dict) -> dict:
         cy_sq = ac * ac - cx * cx
         if cy_sq < -1e-8:
             raise ValueError(f"triangle {root} violates triangle inequality")
-        coords[a] = (component_offset, 0.0)
-        coords[b] = (component_offset + ab, 0.0)
-        coords[c] = (component_offset + cx, math.sqrt(max(0.0, cy_sq)))
+        face_coords[root] = {
+            a: (component_offset, 0.0),
+            b: (component_offset + ab, 0.0),
+            c: (component_offset + cx, math.sqrt(max(0.0, cy_sq))),
+        }
         placed_faces.add(root)
+        component_roots.append(root)
+        component_faces = {root}
         queue = deque([root])
         while queue:
             current = queue.popleft()
             parent = triangles[current]
+            parent_coords = face_coords[current]
             for neighbor, edge in adjacency[current]:
                 if neighbor in placed_faces:
+                    # This adjacency closes a cycle; it becomes a cut in the 2D net.
+                    cut_edges.append({"faces": [current, neighbor], "edge": list(edge)})
                     continue
                 u, v = edge
                 w = next(index for index in triangles[neighbor] if index not in edge)
-                pu, pv = coords[u], coords[v]
+                pu, pv = parent_coords[u], parent_coords[v]
+                length = _distance2(pu, pv)
                 duw = _distance(vertices[u], vertices[w])
                 dvw = _distance(vertices[v], vertices[w])
-                length = _distance2(pu, pv)
                 if length <= 1e-12:
                     raise ValueError("Cannot unfold a zero-length shared edge")
                 along = (duw * duw - dvw * dvw + length * length) / (2 * length)
@@ -111,29 +121,42 @@ def unfold_mesh(params: dict) -> dict:
                     (pu[0] + dx * along + dy * height, pu[1] + dy * along - dx * height),
                 ]
                 parent_third = next(index for index in parent if index not in edge)
-                pp = coords[parent_third]
+                pp = parent_coords[parent_third]
                 cross_parent = (pv[0] - pu[0]) * (pp[1] - pu[1]) - (pv[1] - pu[1]) * (pp[0] - pu[0])
-                cross_candidates = [(pv[0] - pu[0]) * (p[1] - pu[1]) - (pv[1] - pu[1]) * (p[0] - pu[0]) for p in candidates]
-                # Place the neighbor on the opposite side of the hinge edge.
+                cross_candidates = [
+                    (pv[0] - pu[0]) * (point[1] - pu[1]) - (pv[1] - pu[1]) * (point[0] - pu[0])
+                    for point in candidates
+                ]
                 chosen = candidates[0] if cross_parent * cross_candidates[0] < 0 else candidates[1]
-                coords[w] = chosen
+                face_coords[neighbor] = {u: pu, v: pv, w: chosen}
                 placed_faces.add(neighbor)
+                component_faces.add(neighbor)
                 queue.append(neighbor)
-        component_points = [coords[i] for face_i in placed_faces for i in triangles[face_i] if i in coords]
-        max_x = max((p[0] for p in component_points), default=component_offset)
-        component_offset = max_x + 1.0
-        components.append(root)
+        component_points = [point for face_i in component_faces for point in face_coords[face_i].values()]
+        component_offset = max(point[0] for point in component_points) + 1.0
 
-    # Normalize to origin and return coordinates keyed by original vertex index.
-    min_x = min(p[0] for p in coords.values())
-    min_y = min(p[1] for p in coords.values())
-    flat_vertices = [{"index": i, "x": round(p[0] - min_x, 8), "y": round(p[1] - min_y, 8)} for i, p in sorted(coords.items())]
+    all_points = [point for values in face_coords.values() for point in values.values()]
+    min_x = min(point[0] for point in all_points)
+    min_y = min(point[1] for point in all_points)
+    vertices_2d, triangles_2d = [], []
+    for face_i, tri in enumerate(triangles):
+        out_face = []
+        for corner_i, original_index in enumerate(tri):
+            x, y = face_coords[face_i][original_index]
+            out_face.append(len(vertices_2d))
+            vertices_2d.append({
+                "index": len(vertices_2d), "face_index": face_i,
+                "corner_index": corner_i, "source_vertex": original_index,
+                "x": round(x - min_x, 8), "y": round(y - min_y, 8),
+            })
+        triangles_2d.append(out_face)
     return {
         "status": "ok",
         "algorithm": "triangle_bfs_edge_length_unfold",
-        "vertices_2d": flat_vertices,
-        "triangles": [list(face) for face in triangles],
-        "component_count": len(components),
+        "vertices_2d": vertices_2d,
+        "triangles_2d": triangles_2d,
+        "component_count": len(component_roots),
+        "cut_edges": cut_edges,
         "warnings": [
             "Face traversal chooses a spanning forest; cut optimization is not performed.",
             "Self-overlap detection is not performed.",
