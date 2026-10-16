@@ -72,3 +72,43 @@ def test_rejects_more_than_500_parts():
     import pytest
     with pytest.raises(ValueError, match="500 parts"):
         nest_parts({"parts": [{"id": str(i), "width": 1, "height": 1} for i in range(501)]})
+
+def test_rectangular_benchmark_case_has_stable_quality_metrics():
+    request = {
+        "sheet_width": 100, "sheet_height": 70, "margin": 2, "gap": 1,
+        "parts": [
+            {"id": "a", "width": 30, "height": 20},
+            {"id": "b", "width": 25, "height": 18},
+            {"id": "c", "width": 22, "height": 16},
+            {"id": "d", "width": 18, "height": 14},
+            {"id": "e", "width": 12, "height": 28},
+            {"id": "f", "width": 15, "height": 10},
+            {"id": "g", "width": 11, "height": 9},
+            {"id": "h", "width": 8, "height": 8},
+        ],
+    }
+    first = nest_parts(request)
+    second = nest_parts(request)
+    assert first == second
+    assert first["placed_count"] >= 6
+    assert 0 < first["utilization"] < 1
+    assert first["placed_count"] + len(first["unplaced"]) == first["part_count"]
+
+
+def test_mixed_polygon_benchmark_accounts_for_every_part_once():
+    request = {
+        "sheet_width": 100, "sheet_height": 70, "margin": 2, "gap": 1,
+        "parts": [
+            {"id": "tri_a", "points": [[0, 0], [24, 0], [12, 16]]},
+            {"id": "tri_b", "points": [[0, 0], [24, 0], [12, 16]]},
+            {"id": "rect_a", "width": 20, "height": 12},
+            {"id": "concave", "points": [[0, 0], [18, 0], [18, 5], [6, 5], [6, 14], [0, 14]]},
+            {"id": "small", "points": [[0, 0], [10, 0], [5, 8]]},
+        ],
+    }
+    result = nest_parts(request)
+    ids = [part["id"] for part in result["placements"]]
+    assert len(ids) == len(set(ids))
+    assert len(ids) + len(result["unplaced"]) == result["part_count"]
+    assert result["utilization"] > 0
+
