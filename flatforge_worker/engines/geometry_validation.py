@@ -161,6 +161,13 @@ def validate_nesting_result(request, result):
     gap = _finite(sheet.get("gap", 0), "sheet.gap")
     if sw <= 0 or sh <= 0 or margin < 0 or gap < 0 or margin * 2 >= sw or margin * 2 >= sh:
         raise ValueError("geometry validation: invalid sheet dimensions, margin, or gap")
+    request_sw = _finite(request.get("sheet_width", 1000), "request.sheet_width")
+    request_sh = _finite(request.get("sheet_height", 1000), "request.sheet_height")
+    request_margin = _finite(request.get("margin", 0), "request.margin")
+    request_gap = _finite(request.get("gap", 0), "request.gap")
+    if (abs(sw - request_sw) > EPS or abs(sh - request_sh) > EPS
+            or abs(margin - request_margin) > EPS or abs(gap - request_gap) > EPS):
+        raise ValueError("geometry validation: result sheet settings differ from request")
 
     input_parts = request.get("parts")
     placements = result.get("placements")
@@ -225,6 +232,8 @@ def validate_nesting_result(request, result):
             rotated = placement.get("rotated_90", False)
             if not isinstance(rotated, bool):
                 raise ValueError(f"geometry validation: invalid rotation flag for part {placement.get('id')}")
+            if rotated and request.get("allow_rotation", True) is False:
+                raise ValueError(f"geometry validation: rotation is disabled for part {placement.get('id')}")
             expected = (expected_h, expected_w) if rotated else (expected_w, expected_h)
             if abs(w - expected[0]) > EPS or abs(h - expected[1]) > EPS:
                 raise ValueError(f"geometry validation: dimensions/rotation disagree for part {placement.get('id')}")
