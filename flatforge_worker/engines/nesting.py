@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import math
 
+from flatforge_worker.engines.polygon_nesting import nest_polygon_parts
+
 
 _EPSILON = 1e-9
 
@@ -103,6 +105,8 @@ def nest_parts(params: dict) -> dict:
         raise ValueError("'parts' must be a non-empty list")
     if len(parts) > 500:
         raise ValueError("at most 500 parts are supported per nesting request")
+    if any(isinstance(part, dict) and "points" in part for part in parts):
+        return nest_polygon_parts(params)
 
     sheet_width = _positive_number(params.get("sheet_width", 1000), "sheet_width")
     sheet_height = _positive_number(params.get("sheet_height", 1000), "sheet_height")
