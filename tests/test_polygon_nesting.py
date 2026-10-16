@@ -84,3 +84,24 @@ def test_polygon_layout_is_deterministic_and_reports_compact_scoring():
     assert first["algorithm"] == "polygon_vertex_alignment_compact_envelope"
     assert first["placed_count"] == 3
 
+
+def test_legacy_bottom_left_score_is_available_only_for_comparison():
+    request = {
+        "sheet_width": 80, "sheet_height": 60, "margin": 2, "gap": 1,
+        "parts": [
+            {"id": "wide", "points": [[0, 0], [24, 0], [24, 8], [0, 8]]},
+            {"id": "tall", "points": [[0, 0], [8, 0], [8, 18], [0, 18]]},
+            {"id": "triangle", "points": [[0, 0], [12, 0], [6, 8]]},
+        ],
+    }
+    baseline = nest_polygon_parts(request, scoring="bottom_left")
+    current = nest_polygon_parts(request, scoring="compact_envelope")
+    assert baseline["algorithm"] == "polygon_vertex_alignment_bottom_left_baseline"
+    assert current["algorithm"] == "polygon_vertex_alignment_compact_envelope"
+    assert baseline["part_count"] == current["part_count"] == 3
+    assert baseline == nest_polygon_parts(request, scoring="bottom_left")
+
+
+def test_unknown_polygon_scoring_strategy_is_rejected():
+    with pytest.raises(ValueError, match="scoring must be"):
+        nest_polygon_parts({"parts": [{"id": "a", "points": [[0, 0], [2, 0], [0, 2]]}]}, scoring="unknown")
