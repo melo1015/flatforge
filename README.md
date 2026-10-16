@@ -60,3 +60,25 @@ See [protocol](docs/protocol.md), [MCP tools](docs/mcp_tools.md), [deployment](d
 This is not a certified CAD/CAM or structural-analysis system. Unfolding does not optimize cuts or detect self-overlap; rectangular nesting uses a MaxRects-style heuristic and polygon nesting uses a separate vertex-alignment heuristic; neither is optimal; rib planning returns section segments rather than closed rib solids. Blender integration is incomplete. Do not use outputs for safety-critical fabrication without independent verification.
 
 The worker supports optional shared-token authentication through `FLATFORGE_TOKEN`, but the TCP transport has no TLS. Keep it on a trusted private network and do not expose its port directly to the internet; use a TLS-capable private proxy or secure tunnel for remote access. Docker Compose contains only the worker and MCP bridge. PostgreSQL was removed until durable persistence is actually implemented.
+
+
+## Clean-install and Blender integration smoke tests
+
+The CI workflow installs the MCP package from the checked-out source in a fresh runner, runs the test suite, and starts the worker in a separate process for a TCP smoke test. This checks the Python package installation and worker protocol; it does not launch Blender.
+
+To verify the Blender add-on on a machine with Blender installed:
+
+1. Create and activate a fresh Python virtual environment for the worker (Python 3.11 or newer).
+2. From the repository root, install the MCP package and start the worker in one terminal:
+   ```bash
+   python -m pip install ./flatforge_mcp
+   python -m flatforge_worker.server
+   ```
+3. In a second terminal, run Blender's background integration test:
+   ```bash
+   blender --background --factory-startup --python scripts/blender_smoke_test.py
+   ```
+
+The Blender test uses the default worker endpoint `127.0.0.1:8765`, checks the add-on's ping operator, creates a cube, invokes the unfold operator, and verifies that a planar mesh with 12 triangles was created. If the worker is configured with `FLATFORGE_TOKEN`, start Blender with the same environment variable. The test must be run with a Blender executable that is compatible with the add-on (Blender 3.6 or newer is the declared minimum).
+
+On Windows, use `.venv\\Scripts\\activate` to activate the virtual environment and invoke the installed Blender executable by its full path if `blender` is not on `PATH`. Stop the worker with Ctrl+C after the test. A passing background test is a useful integration check, not a manufacturing certification.

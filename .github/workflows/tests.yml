@@ -24,6 +24,8 @@ jobs:
           cache: "pip"
       - name: Install test dependencies
         run: python -m pip install --upgrade pip pytest
+      - name: Verify clean MCP package installation
+        run: python -m pip install ./flatforge_mcp
       - name: Compile project
         run: python -m compileall -q flatforge_proto flatforge_worker flatforge_mcp flatforge_maker scripts
       - name: Run tests
