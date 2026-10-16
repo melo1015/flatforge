@@ -44,6 +44,10 @@ The engine uses a deterministic **MaxRects-style best-short-side-fit heuristic**
 
 This is a heuristic, not a proof of optimal packing. Polygon requests use a separate vertex-alignment heuristic for simple, hole-free contours; candidate placement is scored by envelope compactness before tie-breaking by position. This is a deterministic improvement, not an optimality guarantee.
 
+## Independent geometry validation
+
+Before `/api/nest` returns a layout or `/api/export.svg` creates a cut file, the server runs `validate_nesting_result` from `flatforge_worker/engines/geometry_validation.py`. This validator is independent of the placement heuristics and checks sheet bounds/margins, finite placement coordinates, part IDs and accounting, rectangular rotation dimensions, polygon contour bounds and area, pairwise overlap/clearance, result status, and counts. A failed check aborts the response/export with a validation error. It is a defensive consistency layer, not a proof that a layout is globally optimal or a substitute for CAM simulation and machine-specific validation.
+
 ## Important limitations
 
 - Utilization is the sum of placed shape areas divided by the full sheet area. The displayed leftover area does not subtract the margin and does not account for kerf, tabs, clamps, grain direction, lead-ins, or machine constraints.
