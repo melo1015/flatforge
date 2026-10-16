@@ -7,7 +7,7 @@ This document distinguishes implemented algorithms from work that still requires
 - JSON-RPC 2.0 request validation, duplicate-key rejection, UTF-8 checking and message-size limits are implemented in `flatforge_proto/jsonrpc.py`.
 - The TCP worker applies bounded connection concurrency, per-connection read timeouts and protocol error mapping.
 - The MCP TCP client validates response shape and request IDs and distinguishes remote errors from malformed responses.
-- The worker remains intended for a private/trusted network. It has no authentication or TLS; do not expose it directly to the internet.
+- The worker supports optional shared-token authentication via `FLATFORGE_TOKEN`; the MCP client and Blender add-on read the same environment variable. The transport has no TLS, so keep it on a trusted private network and do not expose it directly to the internet.
 
 ## Geometry engines
 
