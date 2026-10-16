@@ -43,7 +43,11 @@ class BlenderWorkerClient:
         if params is not None and not isinstance(params, dict):
             raise ValueError("params must be an object")
         request_id = next(self._ids) if request_id is None else request_id
-        request = make_request(method, params, request_id)
+        request_params = dict(params or {})
+        token = os.getenv("FLATFORGE_TOKEN")
+        if token:
+            request_params["_auth"] = token
+        request = make_request(method, request_params, request_id)
         payload = (json.dumps(request, separators=(",", ":"), ensure_ascii=False) + "\n").encode("utf-8")
         if len(payload) > self.max_message_bytes:
             raise ValueError("Request exceeds maximum message size")
