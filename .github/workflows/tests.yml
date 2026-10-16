@@ -25,7 +25,7 @@ jobs:
       - name: Install test dependencies
         run: python -m pip install --upgrade pip pytest
       - name: Compile project
-        run: python -m compileall -q flatforge_proto flatforge_worker flatforge_mcp
+        run: python -m compileall -q flatforge_proto flatforge_worker flatforge_mcp flatforge_maker
       - name: Run tests
         env:
           PYTHONPATH: .

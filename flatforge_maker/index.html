@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101b2d">
+  <meta name="description" content="Organiza piezas rectangulares sobre una lámina y exporta un patrón SVG a escala real con FlatForge Maker.">
+  <title>FlatForge Maker — Planificador de corte</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="FlatForge Maker, inicio">
+      <span class="brand-mark" aria-hidden="true">F</span>
+      <span><strong>FlatForge</strong><small>MAKER STUDIO</small></span>
+    </a>
+    <div class="topbar-right">
+      <span class="local-status"><span class="status-dot"></span> Motor local</span>
+      <a class="docs-link" href="https://github.com/melo1015/flatforge" target="_blank" rel="noreferrer">Ver repositorio ↗</a>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="intro">
+      <div>
+        <p class="eyebrow">TALLER DIGITAL · VERSIÓN 0.7</p>
+        <h1>Prepara tu próxima <span>lámina de corte.</span></h1>
+        <p class="intro-copy">Importa contornos SVG simples y distribuye las piezas por sus vértices reales. Los contornos con agujeros y curvas aún no están soportados.</p>
+      </div>
+      <div class="intro-chip"><span aria-hidden="true">✳</span> Prototipo de fabricación</div>
+    </section>
+
+    <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+
+    <section class="workspace" aria-label="Planificador de corte">
+      <aside class="control-panel">
+        <div class="panel-heading">
+          <div><p class="eyebrow">CONFIGURACIÓN</p><h2>Tu proyecto</h2></div>
+          <button id="resetButton" class="text-button" type="button">Restablecer</button>
+        </div>
+
+        <form id="nestForm">
+          <fieldset class="field-group">
+            <legend><span class="step-number">01</span> Tamaño de la lámina</legend>
+            <div class="field-grid">
+              <label>Ancho <span>mm</span><input id="sheetWidth" name="sheetWidth" type="number" min="1" max="100000" step="1" value="600" required></label>
+              <label>Alto <span>mm</span><input id="sheetHeight" name="sheetHeight" type="number" min="1" max="100000" step="1" value="400" required></label>
+            </div>
+            <div class="field-grid compact-grid">
+              <label>Margen <span>mm</span><input id="margin" name="margin" type="number" min="0" max="10000" step="0.5" value="8" required></label>
+              <label>Separación <span>mm</span><input id="gap" name="gap" type="number" min="0" max="10000" step="0.5" value="3" required></label>
+            </div>
+            <label class="toggle-row" for="allowRotation"><span><strong>Permitir giro de 90°</strong><small>Puede ayudar a colocar más piezas.</small></span><input id="allowRotation" name="allowRotation" type="checkbox" checked><span class="toggle-ui" aria-hidden="true"></span></label>
+          </fieldset>
+
+          <fieldset class="field-group import-group">
+            <legend><span class="step-number">02</span> Importar contornos SVG</legend>
+            <label class="import-label" for="svgImportFile">Archivo SVG de piezas</label>
+            <input id="svgImportFile" type="file" accept=".svg,image/svg+xml">
+            <p class="helper-note">Admite rectángulos, polígonos y polilíneas cerradas simples. El motor conserva contornos sin agujeros; se rechazan scripts, transformaciones y rutas no compatibles.</p>
+            <p id="importSummary" class="import-summary" role="status" aria-live="polite" hidden></p>
+          </fieldset>
+
+          <fieldset class="field-group parts-group">
+            <div class="legend-row"><legend><span class="step-number">03</span> Piezas a fabricar</legend><span id="partCount" class="count-pill">4 piezas</span></div>
+            <div class="parts-header" aria-hidden="true"><span>Nombre</span><span>Ancho (mm)</span><span>Alto (mm)</span><span></span></div>
+            <div id="partsList" class="parts-list"></div>
+            <button id="addPartButton" class="add-part-button" type="button"><span aria-hidden="true">＋</span> Añadir pieza</button>
+          </fieldset>
+
+          <button id="calculateButton" class="primary-button" type="submit"><span aria-hidden="true">✳</span> Calcular distribución <span aria-hidden="true">→</span></button>
+          <p class="helper-note">El motor usa MaxRects para rectángulos y alineación de vértices con puntuación de envolvente compacta para polígonos simples. Es heurístico, no óptimo; no admite agujeros ni curvas.</p>
+        </form>
+      </aside>
+
+      <section class="preview-panel" aria-label="Vista previa del diseño">
+        <div class="preview-header">
+          <div><p class="eyebrow">VISTA PREVIA</p><h2>Distribución de piezas</h2></div>
+          <span id="layoutStatus" class="status-pill status-idle">Pendiente de cálculo</span>
+        </div>
+
+        <div class="canvas-wrap">
+          <div id="emptyState" class="empty-state">
+            <div class="empty-icon" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="8" y="8" width="48" height="48" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 24h48M24 8v48" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 4"/><rect x="14" y="30" width="15" height="19" rx="1" fill="currentColor" opacity=".15"/><rect x="34" y="14" width="16" height="8" rx="1" fill="currentColor" opacity=".3"/></svg></div>
+            <h3>Tu lámina empieza aquí</h3>
+            <p>Configura las piezas y calcula la distribución para ver el resultado.</p>
+            <button id="sampleButton" type="button" class="secondary-button">Cargar ejemplo</button>
+          </div>
+          <svg id="sheetSvg" class="sheet-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Distribución calculada de piezas sobre la lámina" hidden></svg>
+        </div>
+
+        <div class="legend">
+          <span><i class="legend-swatch placed-swatch"></i> Pieza colocada</span>
+          <span><i class="legend-swatch margin-swatch"></i> Área útil</span>
+          <span><i class="legend-swatch unplaced-swatch"></i> No colocada</span>
+        </div>
+
+        <div class="metrics-grid">
+          <article class="metric-card"><span>Aprovechamiento</span><strong id="utilizationValue">—</strong><small>Área de piezas / área total</small></article>
+          <article class="metric-card"><span>Piezas colocadas</span><strong id="placedValue">—</strong><small id="placedDetail">Calcula para ver detalles</small></article>
+          <article class="metric-card"><span>Material sobrante</span><strong id="wasteValue">—</strong><small>Estimación por área, sin kerf</small></article>
+        </div>
+
+        <div id="unplacedPanel" class="unplaced-panel" hidden>
+          <h3>Revisar piezas pendientes</h3>
+          <p>Estas piezas no entraron en la lámina con la configuración actual:</p>
+          <ul id="unplacedList"></ul>
+        </div>
+
+        <div class="export-row">
+          <div><strong>¿Listo para revisar?</strong><small>Exporta los contornos colocados. Verifica siempre el resultado en el software de corte antes de fabricar.</small></div>
+          <button id="exportButton" class="export-button" type="button" disabled><span aria-hidden="true">↓</span> Exportar SVG</button>
+        </div>
+        <p class="safety-note"><span aria-hidden="true">ⓘ</span> Comprueba la escala y la separación en el software de corte antes de fabricar. Esta versión no compensa el ancho del láser (kerf).</p>
+      </section>
+    </section>
+
+    <footer class="page-footer"><span>FlatForge Maker · Prototipo local</span><span>Hecho para diseñar, revisar y fabricar mejor.</span></footer>
+  </main>
+</body>
+</html>
