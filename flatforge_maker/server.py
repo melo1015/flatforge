@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 
 from flatforge_worker.engines.nesting import nest_parts
 from flatforge_maker.svg_export import render_cut_svg
+from flatforge_maker.svg_import import import_svg_outlines
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 MAX_REQUEST_BYTES = 256 * 1024
@@ -69,7 +70,7 @@ class MakerHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler API
         path = urlparse(self.path).path
-        if path not in {"/api/nest", "/api/export.svg"}:
+        if path not in {"/api/nest", "/api/export.svg", "/api/import.svg"}:
             self._send_json(404, {"error": "Not found"})
             return
 
@@ -94,6 +95,10 @@ class MakerHandler(BaseHTTPRequestHandler):
             payload = json.loads(raw.decode("utf-8"))
             if not isinstance(payload, dict):
                 raise ValueError("Request JSON must be an object")
+            if path == "/api/import.svg":
+                imported = import_svg_outlines(payload.get("svg"))
+                self._send_json(200, imported)
+                return
             result = nest_parts(payload)
             if path == "/api/export.svg":
                 body = render_cut_svg(result)
