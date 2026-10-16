@@ -17,7 +17,10 @@ from flatforge_worker.handlers import dispatch
 
 class Handler(socketserver.StreamRequestHandler):
     def setup(self):
-        self.request.settimeout(float(os.getenv("FLATFORGE_READ_TIMEOUT", "10")))
+        read_timeout = float(os.getenv("FLATFORGE_READ_TIMEOUT", "10"))
+        if not 0.1 <= read_timeout <= 3600:
+            raise ValueError("FLATFORGE_READ_TIMEOUT must be between 0.1 and 3600 seconds")
+        self.request.settimeout(read_timeout)
         super().setup()
 
     def _send(self, payload: dict) -> None:
@@ -104,10 +107,13 @@ def main():
     host = os.getenv("FLATFORGE_HOST", "127.0.0.1")
     port = int(os.getenv("FLATFORGE_PORT", "8765"))
     max_connections = int(os.getenv("FLATFORGE_MAX_CONNECTIONS", "32"))
+    read_timeout = float(os.getenv("FLATFORGE_READ_TIMEOUT", "10"))
     if not 1 <= port <= 65535:
         raise ValueError("FLATFORGE_PORT must be between 1 and 65535")
     if not 1 <= max_connections <= 1024:
         raise ValueError("FLATFORGE_MAX_CONNECTIONS must be between 1 and 1024")
+    if not 0.1 <= read_timeout <= 3600:
+        raise ValueError("FLATFORGE_READ_TIMEOUT must be between 0.1 and 3600 seconds")
     with BoundedThreadingTCPServer((host, port), Handler, max_connections) as server:
         print(f"FlatForge worker listening on {host}:{port}")
         try:
