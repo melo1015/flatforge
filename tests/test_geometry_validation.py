@@ -79,3 +79,14 @@ def test_rejects_missing_part_accounting():
     broken["placements"] = []
     with pytest.raises(ValueError, match="do not account"):
         validate_nesting_result(request, broken)
+
+def test_allows_shared_boundary_when_gap_is_zero():
+    request = {
+        "sheet_width": 20, "sheet_height": 10, "gap": 0,
+        "allow_rotation": False,
+        "parts": [{"id": "left", "width": 10, "height": 10}, {"id": "right", "width": 10, "height": 10}],
+    }
+    result = nest_parts(request)
+    report = validate_nesting_result(request, result)
+    assert report["valid"] is True
+    assert report["placed"] == 2
