@@ -5,7 +5,7 @@ from flatforge_worker.engines.ribs import generate_ribs
 from flatforge_worker.engines.unfold import unfold_mesh
 
 
-def test_nesting_places_rectangles_without_overlap_on_simple_shelf():
+def test_nesting_places_rectangles_without_overlap_on_simple_sheet():
     result = nest_parts({
         "sheet_width": 100,
         "sheet_height": 100,
@@ -19,7 +19,7 @@ def test_nesting_places_rectangles_without_overlap_on_simple_shelf():
     assert result["placed_count"] == 2
     first, second = result["placements"]
     assert first["x"] != second["x"] or first["y"] != second["y"]
-    assert result["algorithm"] == "rectangular_shelf_heuristic"
+    assert result["algorithm"] == "rectangular_maxrects_best_short_side_fit"
 
 
 def test_nesting_reports_unplaced_parts():
