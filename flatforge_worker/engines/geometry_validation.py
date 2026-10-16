@@ -112,6 +112,33 @@ def _polygons_conflict(a, b, gap):
     return False
 
 
+def _same_contour_shape(source, contour):
+    """Compare ordered edge vectors, ignoring translation and 90-degree rotation."""
+    if len(source) != len(contour):
+        return False
+
+    def edges(points):
+        return [
+            (points[(i + 1) % len(points)][0] - points[i][0],
+             points[(i + 1) % len(points)][1] - points[i][1])
+            for i in range(len(points))
+        ]
+
+    source_edges = edges(source)
+    contour_edges = edges(contour)
+    variants = [
+        source_edges,
+        [(dy, -dx) for dx, dy in source_edges],
+    ]
+    for expected in variants:
+        for offset in range(len(expected)):
+            shifted = expected[offset:] + expected[:offset]
+            if all(abs(a[0] - b[0]) <= EPS and abs(a[1] - b[1]) <= EPS
+                   for a, b in zip(shifted, contour_edges)):
+                return True
+    return False
+
+
 def _rect_polygon(placement):
     x, y = placement["x"], placement["y"]
     w, h = placement["width"], placement["height"]
@@ -186,6 +213,8 @@ def validate_nesting_result(request, result):
                 raise ValueError(f"geometry validation: contour vertex count changed for part {placement.get('id')}")
             if abs(_area(contour) - source["area"]) > max(EPS, source["area"] * 1e-5):
                 raise ValueError(f"geometry validation: contour area changed for part {placement.get('id')}")
+            if not _same_contour_shape(source["points"], contour):
+                raise ValueError(f"geometry validation: contour shape changed for part {placement.get('id')}")
             min_x, min_y = min(p[0] for p in contour), min(p[1] for p in contour)
             max_x, max_y = max(p[0] for p in contour), max(p[1] for p in contour)
             if abs(min_x - x) > EPS or abs(min_y - y) > EPS or abs(max_x - min_x - w) > EPS or abs(max_y - min_y - h) > EPS:
